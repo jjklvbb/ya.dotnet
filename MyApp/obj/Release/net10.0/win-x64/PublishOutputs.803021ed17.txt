@@ -1,5 +1,0 @@
-D:\git\ya.dotnet\MyPublishedApp\MyApp.exe
-D:\git\ya.dotnet\MyPublishedApp\MyApp.dll
-D:\git\ya.dotnet\MyPublishedApp\MyApp.deps.json
-D:\git\ya.dotnet\MyPublishedApp\MyApp.runtimeconfig.json
-D:\git\ya.dotnet\MyPublishedApp\MyApp.pdb
