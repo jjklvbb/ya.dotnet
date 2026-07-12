@@ -4,9 +4,9 @@ namespace WebApiProject.Interfaces
 {
     public interface IEventService
     {
-        List<Event> GetAllEvents();
+        Dictionary<Guid, Event> GetAllEvents();
 
-        Event? GetEventById(Guid id);
+        Event GetEventById(Guid id);
 
         void CreateEvent(Event newEvent);
 

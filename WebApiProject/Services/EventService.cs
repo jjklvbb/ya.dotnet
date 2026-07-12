@@ -5,37 +5,38 @@ namespace WebApiProject.Services
 {
     public class EventService : IEventService
     {
-        // можно было использовать Dictionary
-        public static List<Event> events {  get; private set; }
+        public static Dictionary<Guid, Event> events {  get; private set; } = new Dictionary<Guid, Event>();
 
-        public List<Event> GetAllEvents()
+        public Dictionary<Guid, Event> GetAllEvents()
         {
             return events;
         }
 
-        public Event? GetEventById(Guid id)
+        public Event GetEventById(Guid id)
         {
-            return events.Where(e => e.Id == id).FirstOrDefault();
+            return events[id]; // если не будет элемента - генерируется ошибка KeyNotFountException
         }
 
         public void CreateEvent(Event newEvent)
         {
-            events.Add(newEvent);
+            newEvent.Validate();
+            events.Add(newEvent.Id, newEvent);
         }
 
         public void UpdateEvent(Guid id, Event newEvent)
         {
-            Event? ev = events.Find(e => e.Id == id);
-
-            if (ev == null)
-                throw new Exception("Не найдено событие для обновления");
-
-            ev = newEvent;
+            if (id != newEvent.Id)
+                throw new ArgumentException("Некорректные входные данные. ID события не совпадает");
+            newEvent.Validate();
+            if (events.ContainsKey(id))
+                events[id] = newEvent;
+            else throw new KeyNotFoundException();
         }
 
         public void DeleteEvent(Guid id)
         {
-            events.RemoveAll(e => e.Id == id);
+            if (!events.Remove(id))
+                throw new KeyNotFoundException();
         }
     }
 }
