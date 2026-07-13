@@ -7,10 +7,11 @@
 ### Запуск проекта
 
 1. Клонировать репозиторий: `git clone https://github.com/jjklvbb/ya.dotnet.git`
-2. Перейти в папку `..\ya.dotnet\WebApiProject`
+2. Перейти в папку `../ya.dotnet/WebApiProject`
 3. Собрать проект: `dotnet build`
 4. Запустить приложение: `dotnet run`
-5. Открыть Swagger по адресу: `http://localhost:5168/swagger/index.html`
+5. Приложение будет доступно следующему адресу: `http://localhost:5168/`
+6. Открыть Swagger по адресу: `http://localhost:5168/swagger/`
 ###  API
 
 Реализован RESTful Web API проект для управления событиями на **C# (.NET 10)** с использованием **ASP.NET Core Web API**.
