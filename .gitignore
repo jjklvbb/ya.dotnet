@@ -68,3 +68,5 @@ obj/
 *.cache
 *.nupkg
 *.tmp
+
+.obsidian

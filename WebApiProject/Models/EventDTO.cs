@@ -2,11 +2,8 @@
 
 namespace WebApiProject.Models
 {
-    public class Event
+    public class EventDTO
     {
-        [Required]
-        public Guid Id { get; set; }
-
         [Required]
         public string Title { get; set; }
 
@@ -18,15 +15,15 @@ namespace WebApiProject.Models
         [Required]
         public DateTime EndAt { get; set; }
 
-        public Event() { }
+        public EventDTO() { }
 
-        public Event(Guid id, string title, string description, DateTime startAt, DateTime endAt)
+        public EventDTO(string title, string desciption, DateTime startAt, DateTime endAt)
         {
-            Id = id;
             Title = title;
-            Description = description;
+            Description = desciption;
             StartAt = startAt;
             EndAt = endAt;
         }
+
     }
 }

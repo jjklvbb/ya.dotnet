@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using WebApiProject.Interfaces;
 using WebApiProject.Services;
 
@@ -17,6 +18,10 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IEventService, EventService>();
