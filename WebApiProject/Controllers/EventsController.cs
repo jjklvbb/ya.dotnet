@@ -2,7 +2,6 @@
 using System.Net;
 using WebApiProject.Interfaces;
 using WebApiProject.Models;
-using static System.Net.WebRequestMethods;
 
 namespace WebApiProject.Controllers
 {
@@ -12,47 +11,53 @@ namespace WebApiProject.Controllers
     {
         //GET /events — получить список всех событий;
         [HttpGet]
-        public ApiResult<Dictionary<Guid,Event>> GetAllEvents()
+        public IActionResult GetAllEvents()
         {
-            return new ApiResult<Dictionary<Guid, Event>>
+            var result = new ApiResult<Dictionary<Guid, Event>>
             {
                 Data = _eventService.GetAllEvents(),
                 Success = true,
                 StatusCode = HttpStatusCode.OK,
                 Message = "Получение списка всех событий"
             };
+
+            return Ok(result);
         }
 
         //GET /events/{id} — получить событие по id; если не найдено — вернуть корректный HTTP - ответ(например, 404);
         [HttpGet("{id:Guid}")]
-        public ApiBaseResult GetEventById(Guid id)
+        public IActionResult GetEventById(Guid id)
         {
             try
             {
-                return new ApiResult<Event>
+                var result = new ApiResult<Event>
                 {
                     Data = _eventService.GetEventById(id),
                     Success = true,
                     StatusCode = HttpStatusCode.OK,
                     Message = "Получение события по ID"
                 };
+
+                return Ok(result);
             }
             catch (KeyNotFoundException ex)
             {
-                return new ApiResult
+                var badResult = new ApiResult
                 {
                     Success = false,
                     StatusCode = HttpStatusCode.NotFound,
                     Message = $"Событие не найдено. Подробности: {ex.Message}"
                 };
+
+                return NotFound(badResult);
             }
         }
 
         //POST /events — создать событие, возвращать корректный HTTP-ответ(например, 201);
         [HttpPost]
-        public ApiBaseResult Post([FromBody]EventDTO newEvent)
+        public IActionResult Post([FromBody]EventDTO newEvent)
         {
-            if (newEvent.StartAt > newEvent.EndAt)
+            if (newEvent.StartAt >= newEvent.EndAt)
             {
                 ModelState.AddModelError("EndAt", "EndAt должен быть позже StartAt.");
             }
@@ -64,12 +69,14 @@ namespace WebApiProject.Controllers
                     .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
                     .ToArray();
 
-                return new ApiResult
+                var badResult = new ApiResult
                 {
                     Success = false,
                     StatusCode = HttpStatusCode.BadRequest,
                     Message = $"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}"
                 };
+
+                return BadRequest(badResult);
             }
                 
 
@@ -77,19 +84,21 @@ namespace WebApiProject.Controllers
 
             _eventService.CreateEvent(ev);
 
-            return new ApiResult
+            var result = new ApiResult
             {
                 Success = true,
                 StatusCode = HttpStatusCode.OK,
                 Message = "Создание события"
             };
+
+            return CreatedAtAction(nameof(GetEventById), new { id = ev.Id }, result);
         }
 
         //PUT /events/{id} — обновить событие целиком; если не найдено — вернуть корректный HTTP-ответ (например, 404);
         [HttpPut("{id:Guid}")]
-        public ApiBaseResult Put(Guid id, [FromBody] EventDTO newEvent)
+        public IActionResult Put(Guid id, [FromBody] EventDTO newEvent)
         {
-            if (newEvent.StartAt > newEvent.EndAt)
+            if (newEvent.StartAt >= newEvent.EndAt)
             {
                 ModelState.AddModelError("EndAt", "EndAt должен быть позже StartAt.");
             }
@@ -101,12 +110,14 @@ namespace WebApiProject.Controllers
                     .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
                     .ToArray();
 
-                return new ApiResult
+                var badResult = new ApiResult
                 {
                     Success = false,
                     StatusCode = HttpStatusCode.BadRequest,
                     Message = $"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}"
                 };
+
+                return BadRequest(badResult);
             }
 
             var ev = new Event(id, newEvent.Title, newEvent.Description, newEvent.StartAt, newEvent.EndAt);
@@ -115,47 +126,55 @@ namespace WebApiProject.Controllers
             {
                 _eventService.UpdateEvent(id, ev);
 
-                return new ApiResult
+                var result = new ApiResult
                 {
                     Success = true,
                     StatusCode = HttpStatusCode.OK,
                     Message = "Обновление события"
                 };
+
+                return Ok(result);
             }
             catch (KeyNotFoundException ex)
             {
-                return new ApiResult
+                var badResult = new ApiResult
                 {
                     Success = false,
                     StatusCode = HttpStatusCode.NotFound,
                     Message = $"Событие не найдено. Подробности: {ex.Message}"
                 };
+
+                return NotFound(badResult);
             }
         }
 
         //DELETE /events/{id} — удалить событие; если не найдено — вернуть корректный HTTP-ответ (например, 404).
         [HttpDelete("{id:Guid}")]
-        public ApiBaseResult Delete(Guid id)
+        public IActionResult Delete(Guid id)
         {
             try
             {
                 _eventService.DeleteEvent(id);
 
-                return new ApiResult
+                var result = new ApiResult
                 {
                     Success = true,
                     StatusCode = HttpStatusCode.OK,
                     Message = "Удаление события"
                 };
+
+                return Ok(result);
             }
             catch (KeyNotFoundException ex)
             {
-                return new ApiResult
+                var badResult = new ApiResult
                 {
                     Success = false,
                     StatusCode = HttpStatusCode.NotFound,
                     Message = $"Событие не найдено. Подробности: {ex.Message}"
                 };
+
+                return NotFound(badResult);
             }
         }
     }
