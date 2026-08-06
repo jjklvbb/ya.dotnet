@@ -10,6 +10,25 @@ namespace WebApiProject.Services
     {
         private readonly Dictionary<Guid, Event> _events = new ();
 
+        public EventService()
+        {
+
+        }
+        public EventService (List<Event>? list)
+        {
+            if (list == null)
+            {
+                _events = new Dictionary<Guid, Event> ();
+            }
+            else
+            {
+                foreach (var item in list)
+                {
+                    _events.Add(item.Id, item);
+                }
+            }
+        }
+
         public PagedResult<Event> GetEvents(EventFilterParameters filter, int page = 1, int pageSize = 10)
         {
             IQueryable<Event> query = _events.Values.AsQueryable();
@@ -37,7 +56,7 @@ namespace WebApiProject.Services
 
             int totalPages = (int)Math.Ceiling((double)result.Count / pageSize);
 
-            return new PagedResult<Event>(result, pageSize, totalPages, result.Count);
+            return new PagedResult<Event>(result, page, totalPages, result.Count);
         }
 
         public Event GetEventById(Guid id)
