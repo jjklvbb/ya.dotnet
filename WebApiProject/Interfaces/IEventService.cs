@@ -4,7 +4,7 @@ namespace WebApiProject.Interfaces
 {
     public interface IEventService
     {
-        Dictionary<Guid, Event> GetAllEvents();
+        PagedResult<Event> GetEvents(EventFilterParameters filter, int page, int pageSize);
 
         Event GetEventById(Guid id);
 

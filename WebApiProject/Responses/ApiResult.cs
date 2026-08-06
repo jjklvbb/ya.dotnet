@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace WebApiProject.Models
+namespace WebApiProject.Responses
 {
     // Класс ApiResult c возвращаемыми данными
     // Наследуемся от базового класса с основными параметрами

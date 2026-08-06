@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using WebApiProject.Interfaces;
+using WebApiProject.Middlewares;
 using WebApiProject.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,7 @@ builder.Services.AddSingleton<IEventService, EventService>();
 
 var app = builder.Build();
 
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("AllowCORS");
