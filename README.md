@@ -4,21 +4,24 @@
 - В папке **theoryPractice** лежат проекты, которые использовались при изучении теории
 
 ## Учебный проект WebApiProject
+
 ### Запуск проекта
 
 1. Клонировать репозиторий: `git clone https://github.com/jjklvbb/ya.dotnet.git`
 2. Перейти в папку `../ya.dotnet/WebApiProject`
 3. Собрать проект: `dotnet build`
-4. Запустить приложение: `dotnet run`
-5. Приложение будет доступно следующему адресу: `http://localhost:5168/`
-6. Открыть Swagger по адресу: `http://localhost:5168/swagger/`
+4. Запустить тесты: `dotnet test`
+5. Запустить приложение: `dotnet run`
+6. Приложение будет доступно следующему адресу: `http://localhost:5168/`
+7. Открыть Swagger по адресу: `http://localhost:5168/swagger/`
+
 ###  API
 
 Реализован RESTful Web API проект для управления событиями на **C# (.NET 10)** с использованием **ASP.NET Core Web API**.
 
 API предоставляет полный CRUD-набор операций над событиями:
 
-- `GET /events` — получить список всех событий  
+- `GET /events` — получить список всех событий (с поддержкой фильтрации и пагинации)
 - `GET /events/{id}` — получить событие по ID  
 - `POST /events` — создать новое событие  
 - `PUT /events/{id}` — обновить существующее событие  
@@ -29,22 +32,57 @@ API предоставляет полный CRUD-набор операций н�
 - Поля `startAt` и `endAt` обязательны.
 - Значение `endAt` должно быть позже `startAt`.
 
-Все ответы от API имеют единый формат:
-```json
+## Примеры запросов:
+```http
+# Получить все события
+GET /events
+
+# Фильтрация по названию и датам
+GET /events?title=концерт&from=2026-10-01&to=2026-12-31
+
+# Пагинация (вторая страница по 5 событий)
+GET /events?page=2&pageSize=5
+
+# Комбинированный запрос
+GET /events?title=встреча&page=1&pageSize=10
+```
+
+## Формат ответов при ошибках
+
+При возникновении исключений глобальный middleware перехватывает их и возвращает единообразный ответ в формате RFC 7807 (Problem Details) с соответствующим HTTP-статусом:
+
+Пример 400 Bad Request (Ошибка валидации):
+```
 {
-  "data": { ... },          // только для успешных GET-запросов
-  "success": true,
-  "statusCode": 200,
-  "dateTime": "2026-07-13T10:05:00Z",
-  "message": "Описание результата"
+  "type": null,
+  "title": null,
+  "status": 400,
+  "detail": "Модель не валидна. Подробности: The Title field is required.",
+  "instance": null,
+  "extensions": {}
 }
 ```
-При ошибках валидации или некорректных запросах возвращается ответ с кодом **400 Bad Request** или **404 Not Found** и описанием ошибок, например:
-```json
+
+Пример 404 Not Found:
+```
 {
-  "success": false,
-  "statusCode": 404,
-  "dateTime": "2026-07-13T06:45:28.8271707Z",
-  "message": "Событие не найдено: The given key 'c6c6d615-33f4-41ce-8d00-19016222942a' was not present in the dictionary."
+  "type": null,
+  "title": null,
+  "status": 404,
+  "detail": "Событие по ключу 6cb53659-8f98-4e23-b7c9-b7411e77a0c8 не найдено.",
+  "instance": null,
+  "extensions": {}
+}
+```
+
+Пример 500 Internal Server Error:
+```
+{
+  "type": null,
+  "title": null,
+  "status": 500,
+  "detail": "Attempted to divide by zero.",
+  "instance": null,
+  "extensions": {}
 }
 ```

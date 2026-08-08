@@ -60,6 +60,7 @@ namespace WebApiProject.Middlewares
             {
                 ValidationException ve => StatusCodes.Status400BadRequest,
                 NotFoundException nfe => StatusCodes.Status404NotFound,
+                ArgumentException ae => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
             };
     }

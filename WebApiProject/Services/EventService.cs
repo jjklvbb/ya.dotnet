@@ -48,15 +48,17 @@ namespace WebApiProject.Services
                 query = query.Where(e => e.EndAt <= filter.To.Value);
             }
 
-            var result = query
-                .OrderByDescending(c => c.StartAt)
+            int totalItems = query.Count();
+
+            var items = query
+                .OrderByDescending(e => e.StartAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
 
-            int totalPages = (int)Math.Ceiling((double)result.Count / pageSize);
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
 
-            return new PagedResult<Event>(result, page, totalPages, result.Count);
+            return new PagedResult<Event>(items, page, totalPages, totalItems);
         }
 
         public Event GetEventById(Guid id)

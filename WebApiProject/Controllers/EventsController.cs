@@ -47,11 +47,6 @@ namespace WebApiProject.Controllers
         [HttpPost]
         public IActionResult Post([FromBody]EventDTO newEvent)
         {
-            if (newEvent.StartAt >= newEvent.EndAt)
-            {
-                throw new ValidationException("Модель не валидна. Подробности: EndAt должен быть позже StartAt.");
-            }
-
             if (!ModelState.IsValid)
             {
                 var errorMessages = ModelState
@@ -69,7 +64,7 @@ namespace WebApiProject.Controllers
             var result = new ApiResult
             {
                 Success = true,
-                StatusCode = HttpStatusCode.OK,
+                StatusCode = HttpStatusCode.Created,
                 Message = "Создание события"
             };
 
@@ -80,11 +75,6 @@ namespace WebApiProject.Controllers
         [HttpPut("{id:Guid}")]
         public IActionResult Put(Guid id, [FromBody] EventDTO newEvent)
         {
-            if (newEvent.StartAt >= newEvent.EndAt)
-            {
-                throw new ValidationException("Модель не валидна. Подробности: EndAt должен быть позже StartAt.");
-            }
-
             if (!ModelState.IsValid)
             {
                 var errorMessages = ModelState
@@ -116,15 +106,7 @@ namespace WebApiProject.Controllers
         {
             _eventService.DeleteEvent(id);
 
-            var result = new ApiResult
-            {
-                Success = true,
-                StatusCode = HttpStatusCode.OK,
-                Message = "Удаление события"
-            };
-
-            return Ok(result);
-            
+            return NoContent();
         }
     }
 }
