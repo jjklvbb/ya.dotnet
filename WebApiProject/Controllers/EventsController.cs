@@ -11,7 +11,7 @@ namespace WebApiProject.Controllers
     [Route("[controller]")]
     public class EventsController (IEventService _eventService) : ControllerBase
     {
-        //GET /events — получить список всех событий;
+        //GET /events — получить список событий (с поддержкой фильтрации и пагинации);
         [HttpGet]
         public IActionResult GetEvents([FromQuery] EventFilterParameters filter, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {

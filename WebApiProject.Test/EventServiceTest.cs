@@ -130,7 +130,6 @@ public class EventServiceTest
         Assert.Equal(2, result.TotalItems);
         Assert.Equal(2, result.Items.Count());
 
-        // 2. Для надежности проверяем, что это именно нужные события, а не какие-то другие
         var titles = result.Items.Select(e => e.Title).ToList();
         Assert.Contains("Встреча с одногруппниками", titles);
         Assert.Contains("Тимбилдинг", titles);
@@ -207,7 +206,6 @@ public class EventServiceTest
     public void CreateEvent_EmptyTitle_ThrowsArgumentException() //создание события с некорректными данными (если валидация в сервисе);
     {
         // Act & Assert
-        // Проверяем, что модель Event не позволяет создать себя с пустым названием
         Assert.Throws<ArgumentException>(() =>
             new Event(Guid.NewGuid(), "", "Описание", DateTime.Now.AddDays(1), DateTime.Now.AddDays(2)));
     }
@@ -219,7 +217,6 @@ public class EventServiceTest
         var existingId = _events[0].Id; // Берем ID существующего события
 
         // Act & Assert
-        // Пытаемся создать объект Event для обновления с "перевернутыми" датами
         Assert.Throws<ArgumentException>(() =>
             new Event(existingId, "Новое название", "Описание", DateTime.Now.AddDays(2), DateTime.Now.AddDays(1)));
     }
