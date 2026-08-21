@@ -1,4 +1,7 @@
-﻿using WebApiProject.Interfaces;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Diagnostics;
+using WebApiProject.Exceptions;
+using WebApiProject.Interfaces;
 using WebApiProject.Models;
 
 namespace WebApiProject.Services
@@ -7,14 +10,67 @@ namespace WebApiProject.Services
     {
         private readonly Dictionary<Guid, Event> _events = new ();
 
-        public Dictionary<Guid, Event> GetAllEvents()
+        public EventService()
         {
-            return _events;
+
+        }
+        public EventService (List<Event>? list)
+        {
+            if (list == null)
+            {
+                _events = new Dictionary<Guid, Event> ();
+            }
+            else
+            {
+                foreach (var item in list)
+                {
+                    _events.Add(item.Id, item);
+                }
+            }
+        }
+
+        public PagedResult<Event> GetEvents(EventFilterParameters filter, int page = 1, int pageSize = 10)
+        {
+            IQueryable<Event> query = _events.Values.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(filter.Title))
+            {
+                query = query.Where(e => e.Title.Contains(filter.Title, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (filter.From.HasValue)
+            {
+                query = query.Where(e => e.StartAt >= filter.From.Value);
+            }
+
+            if (filter.To.HasValue)
+            {
+                query = query.Where(e => e.EndAt <= filter.To.Value);
+            }
+
+            int totalItems = query.Count();
+
+            var items = query
+                .OrderByDescending(e => e.StartAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            return new PagedResult<Event>(items, page, totalPages, totalItems);
         }
 
         public Event GetEventById(Guid id)
         {
-            return _events[id]; // если не будет элемента - генерируется ошибка KeyNotFountException
+            try
+            {
+                return _events[id]; // если не будет элемента - генерируется ошибка KeyNotFountException
+            }
+            catch(KeyNotFoundException)
+            {
+                throw new NotFoundException($"Событие по ключу {id} не найдено.");
+            }
         }
 
         public void CreateEvent(Event newEvent)
@@ -26,13 +82,13 @@ namespace WebApiProject.Services
         {
             if (_events.ContainsKey(id))
                 _events[id] = newEvent;
-            else throw new KeyNotFoundException();
+            else throw new NotFoundException($"Событие по ключу {id} не найдено.");
         }
 
         public void DeleteEvent(Guid id)
         {
             if (!_events.Remove(id))
-                throw new KeyNotFoundException();
+                throw new NotFoundException($"Событие по ключу {id} не найдено.");
         }
     }
 }
