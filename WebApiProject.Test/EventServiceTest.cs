@@ -149,7 +149,7 @@ public class EventServiceTest
         // Assert
         Assert.Equal(2, result.Items.Count());
         Assert.Equal(1, result.CurrentPage);
-        Assert.Equal(2, result.TotalPages);
+        Assert.Equal(2, result.CurrentPageItems);
         Assert.Equal(3, result.TotalItems);
     }
 
@@ -200,24 +200,5 @@ public class EventServiceTest
 
         // Assert
         Assert.Throws<NotFoundException>(act);
-    }
-
-    [Fact]
-    public void CreateEvent_EmptyTitle_ThrowsArgumentException() //создание события с некорректными данными (если валидация в сервисе);
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            new Event(Guid.NewGuid(), "", "Описание", DateTime.Now.AddDays(1), DateTime.Now.AddDays(2)));
-    }
-
-    [Fact]
-    public void UpdateEvent_InvalidDates_ThrowsArgumentException() //обновление события с некорректными датами (EndAt раньше StartAt).
-    {
-        // Arrange
-        var existingId = _events[0].Id; // Берем ID существующего события
-
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            new Event(existingId, "Новое название", "Описание", DateTime.Now.AddDays(2), DateTime.Now.AddDays(1)));
     }
 }

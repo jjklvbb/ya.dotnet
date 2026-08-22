@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
-using WebApiProject.Exceptions;
 using WebApiProject.Interfaces;
 using WebApiProject.Models;
 using WebApiProject.Responses;
@@ -13,7 +13,10 @@ namespace WebApiProject.Controllers
     {
         //GET /events — получить список событий (с поддержкой фильтрации и пагинации);
         [HttpGet]
-        public IActionResult GetEvents([FromQuery] EventFilterParameters filter, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public IActionResult GetEvents(
+            [FromQuery] EventFilterParameters filter,
+            [FromQuery, Range(1, int.MaxValue)] int page = 1,
+            [FromQuery, Range(1, int.MaxValue)] int pageSize = 10)
         {
             var result = new ApiResult<PagedResult<Event>>
             {
@@ -54,7 +57,7 @@ namespace WebApiProject.Controllers
                     .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
                     .ToArray();
 
-                throw new ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
+                throw new Exceptions.ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
             }
 
             var ev = new Event(Guid.NewGuid(), newEvent.Title, newEvent.Description, newEvent.StartAt, newEvent.EndAt);
@@ -82,7 +85,7 @@ namespace WebApiProject.Controllers
                     .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
                     .ToArray();
 
-                throw new ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
+                throw new Exceptions.ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
             }
 
             var ev = new Event(id, newEvent.Title, newEvent.Description, newEvent.StartAt, newEvent.EndAt);

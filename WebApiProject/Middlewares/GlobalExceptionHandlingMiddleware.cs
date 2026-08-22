@@ -46,10 +46,20 @@ namespace WebApiProject.Middlewares
             httpContext.Response.StatusCode = statusCode;
             httpContext.Response.ContentType = "application/json";
 
+            var title = statusCode switch
+            {
+                StatusCodes.Status400BadRequest => "Bad request",
+                StatusCodes.Status404NotFound => "Resource not found",
+                StatusCodes.Status500InternalServerError => "Internal server error",
+                _ => "Error"
+            };
+
             var error = new ProblemDetails
             {
                 Status = statusCode,
+                Title = title,
                 Detail = ex.Message
+                //Type = 
             };
 
             await httpContext.Response.WriteAsJsonAsync(error);
@@ -58,9 +68,9 @@ namespace WebApiProject.Middlewares
         private static int MapStatusCode(Exception ex)
             => ex switch
             {
-                ValidationException ve => StatusCodes.Status400BadRequest,
-                NotFoundException nfe => StatusCodes.Status404NotFound,
-                ArgumentException ae => StatusCodes.Status400BadRequest,
+                ValidationException => StatusCodes.Status400BadRequest,
+                NotFoundException => StatusCodes.Status404NotFound,
+                ArgumentException => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
             };
     }

@@ -2,7 +2,7 @@
 
 namespace WebApiProject.Models
 {
-    public class EventDTO
+    public class EventDTO : IValidatableObject
     {
         [Required]
         public string Title { get; set; }
@@ -17,12 +17,22 @@ namespace WebApiProject.Models
 
         public EventDTO() { }
 
-        public EventDTO(string title, string desciption, DateTime startAt, DateTime endAt)
+        public EventDTO(string title, string description, DateTime startAt, DateTime endAt)
         {
             Title = title;
-            Description = desciption;
+            Description = description;
             StartAt = startAt;
             EndAt = endAt;
+        }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (EndAt <= StartAt)
+            {
+                yield return new ValidationResult(
+                    "EndAt должен быть позже StartAt",
+                    new[] { nameof(EndAt) });
+            }
         }
 
     }
