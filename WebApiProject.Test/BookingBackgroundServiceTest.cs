@@ -1,7 +1,4 @@
 ﻿using Microsoft.Extensions.Logging.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using WebApiProject.BackgroundServices;
 using WebApiProject.DataAccess;
 using WebApiProject.Entities;

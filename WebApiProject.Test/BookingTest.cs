@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using WebApiProject.Entities;
+﻿using WebApiProject.Entities;
 
 namespace WebApiProject.Test
 {

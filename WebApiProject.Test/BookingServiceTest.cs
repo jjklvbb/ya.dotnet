@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using WebApiProject.DataAccess;
+﻿using WebApiProject.DataAccess;
 using WebApiProject.Entities;
 using WebApiProject.Exceptions;
 using WebApiProject.Services;
