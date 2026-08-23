@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WebApiProject.Models
+namespace WebApiProject.Entities
 {
     public class Event
     {

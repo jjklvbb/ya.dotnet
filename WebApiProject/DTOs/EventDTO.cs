@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WebApiProject.Models
+namespace WebApiProject.DTOs
 {
     public class EventDTO : IValidatableObject
     {

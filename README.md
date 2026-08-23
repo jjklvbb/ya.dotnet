@@ -65,7 +65,7 @@ GET /events?title=встреча&page=1&pageSize=10
 ```
 {
   "type": null,
-  "title": null,
+  "title": "Bad request",
   "status": 400,
   "detail": "Модель не валидна. Подробности: The Title field is required.",
   "instance": null,
@@ -77,7 +77,7 @@ GET /events?title=встреча&page=1&pageSize=10
 ```
 {
   "type": null,
-  "title": null,
+  "title": "Resource not found",
   "status": 404,
   "detail": "Событие по ключу 6cb53659-8f98-4e23-b7c9-b7411e77a0c8 не найдено.",
   "instance": null,
@@ -89,7 +89,7 @@ GET /events?title=встреча&page=1&pageSize=10
 ```
 {
   "type": null,
-  "title": null,
+  "title": "Internal server error",
   "status": 500,
   "detail": "Attempted to divide by zero.",
   "instance": null,

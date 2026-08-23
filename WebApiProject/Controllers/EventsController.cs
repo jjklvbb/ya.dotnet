@@ -1,16 +1,28 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
+using WebApiProject.Entities;
 using WebApiProject.Interfaces;
-using WebApiProject.Models;
+using WebApiProject.DTOs;
 using WebApiProject.Responses;
 
 namespace WebApiProject.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class EventsController (IEventService _eventService) : ControllerBase
+    public class EventsController : ControllerBase
     {
+        private readonly IEventService _eventService;
+        private readonly IBookingService _bookingService;
+
+        public EventsController(
+            IEventService eventService,
+            IBookingService bookingService)
+        {
+            _eventService = eventService;
+            _bookingService = bookingService;
+        }
+
         //GET /events — получить список событий (с поддержкой фильтрации и пагинации);
         [HttpGet]
         public IActionResult GetEvents(
@@ -18,6 +30,17 @@ namespace WebApiProject.Controllers
             [FromQuery, Range(1, int.MaxValue)] int page = 1,
             [FromQuery, Range(1, int.MaxValue)] int pageSize = 10)
         {
+            if (!ModelState.IsValid)
+            {
+                var errorMessages = ModelState
+                    .Where(kvp => kvp.Value?.Errors.Count > 0)
+                    .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
+                    .ToArray();
+
+                throw new ValidationException(
+                    $"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
+            }
+
             var result = new ApiResult<PagedResult<Event>>
             {
                 Data = _eventService.GetEvents(filter, page, pageSize),
@@ -110,6 +133,26 @@ namespace WebApiProject.Controllers
             _eventService.DeleteEvent(id);
 
             return NoContent();
+        }
+
+        [HttpPost("{id:guid}/book")]
+        public async Task<IActionResult> CreateBooking(Guid id)
+        {
+            var booking = await _bookingService.CreateBookingAsync(id);
+
+            var result = new ApiResult<BookingInfo>
+            {
+                Data = booking,
+                Success = true,
+                StatusCode = HttpStatusCode.Accepted,
+                Message = "Бронь создана и ожидает обработки"
+            };
+
+            return AcceptedAtAction(
+                "GetBookingById",
+                "Bookings",
+                new { id = booking.Id },
+                result);
         }
     }
 }

@@ -1,7 +1,8 @@
 ﻿namespace WebApiProject.Test;
 
+using WebApiProject.Entities;
 using WebApiProject.Exceptions;
-using WebApiProject.Models;
+using WebApiProject.DTOs;
 using WebApiProject.Services;
 
 public class EventServiceTest

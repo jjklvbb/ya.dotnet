@@ -1,6 +1,7 @@
-﻿using WebApiProject.Exceptions;
+﻿using WebApiProject.Entities;
+using WebApiProject.Exceptions;
 using WebApiProject.Interfaces;
-using WebApiProject.Models;
+using WebApiProject.DTOs;
 
 namespace WebApiProject.Services
 {

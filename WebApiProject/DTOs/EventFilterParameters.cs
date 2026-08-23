@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace WebApiProject.Models
+namespace WebApiProject.DTOs
 {
     public class EventFilterParameters
     {

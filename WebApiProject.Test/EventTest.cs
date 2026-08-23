@@ -1,4 +1,4 @@
-﻿using WebApiProject.Models;
+﻿using WebApiProject.Entities;
 
 namespace WebApiProject.Test
 {
