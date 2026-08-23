@@ -1,4 +1,4 @@
-﻿using WebApiProject.Entities;
+﻿using WebApiProject.DTOs;
 
 namespace WebApiProject.Interfaces
 {

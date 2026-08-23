@@ -5,7 +5,7 @@ namespace WebApiProject.DTOs
     public class EventDTO : IValidatableObject
     {
         [Required]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         public string? Description { get; set; }
 
@@ -17,7 +17,7 @@ namespace WebApiProject.DTOs
 
         public EventDTO() { }
 
-        public EventDTO(string title, string description, DateTime startAt, DateTime endAt)
+        public EventDTO(string title, string? description, DateTime startAt, DateTime endAt)
         {
             Title = title;
             Description = description;

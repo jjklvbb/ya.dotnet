@@ -8,7 +8,7 @@ namespace WebApiProject.Entities
         public Guid Id { get; set; }
 
         [Required]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         public string? Description { get; set; }
 
@@ -20,7 +20,7 @@ namespace WebApiProject.Entities
 
         public Event() { }
 
-        public Event(Guid id, string title, string description, DateTime startAt, DateTime endAt)
+        public Event(Guid id, string title, string? description, DateTime startAt, DateTime endAt)
         {
             if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException("Название не может быть пустым", nameof(title));

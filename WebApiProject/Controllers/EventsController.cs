@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 using System.Net;
 using WebApiProject.Entities;
 using WebApiProject.Interfaces;
 using WebApiProject.DTOs;
 using WebApiProject.Responses;
+using System.ComponentModel.DataAnnotations;
 
 namespace WebApiProject.Controllers
 {
@@ -37,7 +37,7 @@ namespace WebApiProject.Controllers
                     .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
                     .ToArray();
 
-                throw new ValidationException(
+                throw new Exceptions.ValidationException(
                     $"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
             }
 

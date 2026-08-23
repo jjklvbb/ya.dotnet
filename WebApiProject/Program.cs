@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using WebApiProject.BackgroundServices;
 using WebApiProject.DataAccess;
 using WebApiProject.Interfaces;
 using WebApiProject.Middlewares;
@@ -29,6 +30,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IEventService, EventService>();
 builder.Services.AddSingleton<IBookingRepository, InMemoryBookingRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddHostedService<BookingBackgroundService>();
 
 var app = builder.Build();
 

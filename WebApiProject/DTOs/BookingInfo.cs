@@ -1,4 +1,6 @@
-﻿namespace WebApiProject.Entities
+﻿using WebApiProject.Entities;
+
+namespace WebApiProject.DTOs
 {
     public record BookingInfo(
         Guid Id,

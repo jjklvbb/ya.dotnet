@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using WebApiProject.Entities;
+using WebApiProject.DTOs;
 using WebApiProject.Interfaces;
 using WebApiProject.Responses;
 
