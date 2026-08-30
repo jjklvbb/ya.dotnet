@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Diagnostics;
+﻿using WebApiProject.Entities;
 using WebApiProject.Exceptions;
 using WebApiProject.Interfaces;
-using WebApiProject.Models;
+using WebApiProject.DTOs;
 
 namespace WebApiProject.Services
 {
@@ -56,9 +55,7 @@ namespace WebApiProject.Services
                 .Take(pageSize)
                 .ToList();
 
-            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-            return new PagedResult<Event>(items, page, totalPages, totalItems);
+            return new PagedResult<Event>(items, page, items.Count, totalItems);
         }
 
         public Event GetEventById(Guid id)
