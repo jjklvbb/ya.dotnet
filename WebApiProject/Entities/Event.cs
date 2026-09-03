@@ -22,8 +22,6 @@ namespace WebApiProject.Entities
 
         public int AvailableSeats { get; private set; }
 
-        public Event() { }
-
         public Event(Guid id, string title, string? description, DateTime startAt, DateTime endAt, int totalSeats)
         {
             if (string.IsNullOrWhiteSpace(title))

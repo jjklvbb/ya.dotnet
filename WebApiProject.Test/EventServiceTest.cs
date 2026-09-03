@@ -16,12 +16,29 @@ public class EventServiceTest
     {
         _events =
         [
-            new() { Id = new Guid("2eff557e-fc03-4ca7-b95d-64146130d992"), Title = "Концерт Димы Билана", Description = "...", 
-                StartAt = new DateTime(2026,10,31,19,0,0), EndAt = new DateTime(2026,10,31,22,0,0)},
-            new() { Id = new Guid("4708d2ee-a407-48a9-82f5-47c9743f8ccf"), Title = "Встреча с одногруппниками", Description = "...",
-                StartAt = new DateTime(2026,8,11,12,0,0), EndAt = new DateTime(2026,8,11,16,0,0)},
-            new() { Id = new Guid("d1b5b26a-0136-42c5-ac2f-9734ef8aff61"), Title = "Тимбилдинг", Description = "...",
-                StartAt = new DateTime(2026,7,23,19,0,0), EndAt = new DateTime(2026,7,23,23,0,0)},
+            new Event(
+                new Guid("2eff557e-fc03-4ca7-b95d-64146130d992"),
+                "Концерт Димы Билана",
+                "...",
+                new DateTime(2026, 10, 31, 19, 0, 0),
+                new DateTime(2026, 10, 31, 22, 0, 0),
+                10),
+
+            new Event(
+                new Guid("4708d2ee-a407-48a9-82f5-47c9743f8ccf"),
+                "Встреча с одногруппниками",
+                "...",
+                new DateTime(2026, 8, 11, 12, 0, 0),
+                new DateTime(2026, 8, 11, 16, 0, 0),
+                10),
+
+            new Event(
+                new Guid("d1b5b26a-0136-42c5-ac2f-9734ef8aff61"),
+                "Тимбилдинг",
+                "...",
+                new DateTime(2026, 7, 23, 19, 0, 0),
+                new DateTime(2026, 7, 23, 23, 0, 0),
+                10)
         ];
 
         _eventRepository = new InMemoryEventRepository();
@@ -43,7 +60,7 @@ public class EventServiceTest
     {
         // Arrange
         var newId = Guid.NewGuid();
-        var newEvent = new Event(newId, "Новое событие", "Описание", DateTime.Now.AddDays(1), DateTime.Now.AddDays(2));
+        var newEvent = new Event(newId, "Новое событие", "Описание", DateTime.Now.AddDays(1), DateTime.Now.AddDays(2), 10);
 
         // Act
         _eventService.CreateEvent(newEvent);
@@ -85,15 +102,15 @@ public class EventServiceTest
     {
         // Arrange
         var idToUpdate = _events[0].Id;
-        var updatedEvent = new Event(idToUpdate, "Новое название", "Обновленное описание",
-            new DateTime(2026, 11, 1), new DateTime(2026, 11, 2));
 
         // Act
-        _eventService.UpdateEvent(idToUpdate, updatedEvent);
+        _eventService.UpdateEvent(idToUpdate, "Новое название", "Обновленное описание", new DateTime(2026, 11, 1), new DateTime(2026, 11, 2));
         var result = _eventService.GetEventById(idToUpdate);
 
         // Assert
         Assert.Equal("Новое название", result.Title);
+        Assert.Equal(10, result.TotalSeats);
+        Assert.Equal(10, result.AvailableSeats);
     }
 
     [Fact]
@@ -203,10 +220,9 @@ public class EventServiceTest
     {
         // Arrange
         var fakeId = Guid.NewGuid();
-        var fakeEvent = new Event(fakeId, "Title", "Desc", DateTime.Now, DateTime.Now.AddDays(1));
 
         // Act
-        Action act = () => _eventService.UpdateEvent(fakeId, fakeEvent);
+        Action act = () => _eventService.UpdateEvent(fakeId, "Title", "Desc", DateTime.Now, DateTime.Now.AddDays(1));
 
         // Assert
         Assert.Throws<NotFoundException>(act);

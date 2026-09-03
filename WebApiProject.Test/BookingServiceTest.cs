@@ -28,7 +28,8 @@ namespace WebApiProject.Test
                 "Test event",
                 null,
                 DateTime.UtcNow.AddHours(1),
-                DateTime.UtcNow.AddHours(2));
+                DateTime.UtcNow.AddHours(2),
+                10);
 
             _eventService.CreateEvent(_event);
         }
