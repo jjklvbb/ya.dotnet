@@ -1,12 +1,14 @@
 ﻿namespace WebApiProject.Test;
 
+using WebApiProject.DataAccess;
+using WebApiProject.DTOs;
 using WebApiProject.Entities;
 using WebApiProject.Exceptions;
-using WebApiProject.DTOs;
 using WebApiProject.Services;
 
 public class EventServiceTest
 {
+    private readonly InMemoryEventRepository _eventRepository;
     private readonly EventService _eventService;
     private readonly List<Event> _events;
 
@@ -22,7 +24,14 @@ public class EventServiceTest
                 StartAt = new DateTime(2026,7,23,19,0,0), EndAt = new DateTime(2026,7,23,23,0,0)},
         ];
 
-        _eventService = new EventService(_events);
+        _eventRepository = new InMemoryEventRepository();
+
+        foreach (var item in _events)
+        {
+            _eventRepository.Add(item);
+        }
+
+        _eventService = new EventService(_eventRepository);
     }
 
     // ==========================================

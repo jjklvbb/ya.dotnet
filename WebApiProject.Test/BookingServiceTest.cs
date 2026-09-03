@@ -7,6 +7,7 @@ namespace WebApiProject.Test
 {
     public class BookingServiceTest
     {
+        private readonly InMemoryEventRepository _eventRepository;
         private readonly EventService _eventService;
         private readonly InMemoryBookingRepository _bookingRepository;
         private readonly BookingService _bookingService;
@@ -14,7 +15,9 @@ namespace WebApiProject.Test
 
         public BookingServiceTest()
         {
-            _eventService = new EventService();
+            _eventRepository = new InMemoryEventRepository();
+            _eventService = new EventService(_eventRepository);
+
             _bookingRepository = new InMemoryBookingRepository();
             _bookingService = new BookingService(
                 _bookingRepository,

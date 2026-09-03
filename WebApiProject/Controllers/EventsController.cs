@@ -71,7 +71,7 @@ namespace WebApiProject.Controllers
 
         //POST /events — создать событие, возвращать корректный HTTP-ответ(например, 201);
         [HttpPost]
-        public IActionResult Post([FromBody]EventDTO newEvent)
+        public IActionResult Post([FromBody] CreateEventDTO newEvent)
         {
             if (!ModelState.IsValid)
             {
@@ -83,7 +83,13 @@ namespace WebApiProject.Controllers
                 throw new Exceptions.ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
             }
 
-            var ev = new Event(Guid.NewGuid(), newEvent.Title, newEvent.Description, newEvent.StartAt, newEvent.EndAt);
+            var ev = new Event(
+                Guid.NewGuid(),
+                newEvent.Title,
+                newEvent.Description,
+                newEvent.StartAt,
+                newEvent.EndAt,
+                newEvent.TotalSeats!.Value);
 
             _eventService.CreateEvent(ev);
 
@@ -99,7 +105,7 @@ namespace WebApiProject.Controllers
 
         //PUT /events/{id} — обновить событие целиком; если не найдено — вернуть корректный HTTP-ответ (например, 404);
         [HttpPut("{id:Guid}")]
-        public IActionResult Put(Guid id, [FromBody] EventDTO newEvent)
+        public IActionResult Put(Guid id, [FromBody] UpdateEventDTO newEvent)
         {
             if (!ModelState.IsValid)
             {
@@ -111,9 +117,7 @@ namespace WebApiProject.Controllers
                 throw new Exceptions.ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
             }
 
-            var ev = new Event(id, newEvent.Title, newEvent.Description, newEvent.StartAt, newEvent.EndAt);
-
-            _eventService.UpdateEvent(id, ev);
+            _eventService.UpdateEvent(id, newEvent.Title, newEvent.Description, newEvent.StartAt, newEvent.EndAt);
 
             var result = new ApiResult
             {
