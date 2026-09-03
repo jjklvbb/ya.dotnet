@@ -30,7 +30,7 @@ namespace WebApiProject.Services
                 if (!ev.TryReserveSeats())
                 {
                     throw new NoAvailableSeatsException(
-                        "Нет доступных мест на данное событие.");
+                        "No available seats for this event.");
                 }
 
                 _eventRepository.Update(ev);

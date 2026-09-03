@@ -256,5 +256,62 @@ namespace WebApiProject.Test
 
             Assert.Equal(0, ev.AvailableSeats);
         }
+
+        [Fact]
+        public async Task RejectBooking_ReleaseSeats_RestoresAvailableSeats()
+        {
+            // Arrange
+            var ev = CreateTestEvent(1);
+
+            var bookingInfo = await _bookingService.CreateBookingAsync(ev.Id);
+
+            Assert.Equal(0, ev.AvailableSeats);
+
+            var booking = _bookingRepository.GetById(bookingInfo.Id);
+
+            Assert.NotNull(booking);
+
+            // Act
+            booking.Reject();
+            _bookingRepository.Update(booking);
+
+            ev.ReleaseSeats();
+            _eventRepository.Update(ev);
+
+            // Assert
+            Assert.Equal(BookingStatus.Rejected, booking.Status);
+            Assert.Equal(1, ev.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task RejectBooking_ReleaseSeats_AllowsNewBooking()
+        {
+            // Arrange
+            var ev = CreateTestEvent(1);
+
+            var firstBookingInfo =
+                await _bookingService.CreateBookingAsync(ev.Id);
+
+            var firstBooking =
+                _bookingRepository.GetById(firstBookingInfo.Id);
+
+            Assert.NotNull(firstBooking);
+
+            firstBooking.Reject();
+            _bookingRepository.Update(firstBooking);
+
+            ev.ReleaseSeats();
+            _eventRepository.Update(ev);
+
+            // Act
+            var secondBooking =
+                await _bookingService.CreateBookingAsync(ev.Id);
+
+            // Assert
+            Assert.NotNull(secondBooking);
+            Assert.Equal(BookingStatus.Pending, secondBooking.Status);
+            Assert.NotEqual(firstBooking.Id, secondBooking.Id);
+            Assert.Equal(0, ev.AvailableSeats);
+        }
     }
 }
