@@ -8,24 +8,38 @@ namespace WebApiProject.Services
     public class BookingService : IBookingService
     {
         private readonly IBookingRepository _bookingRepository;
-        private readonly IEventService _eventService;
+        private readonly IEventRepository _eventRepository;
+        private readonly object _bookingLock = new();
 
         public BookingService(
             IBookingRepository bookingRepository,
-            IEventService eventService)
+            IEventRepository eventRepository)
         {
             _bookingRepository = bookingRepository;
-            _eventService = eventService;
+            _eventRepository = eventRepository;
         }
 
         public Task<BookingInfo> CreateBookingAsync(Guid eventId)
         {
-            _eventService.GetEventById(eventId);
+            lock (_bookingLock)
+            {
+                var ev = _eventRepository.GetById(eventId)
+                    ?? throw new NotFoundException(
+                        $"Событие по ключу {eventId} не найдено.");
 
-            var booking = new Booking(eventId);
-            _bookingRepository.Add(booking);
+                if (!ev.TryReserveSeats())
+                {
+                    throw new NoAvailableSeatsException(
+                        "Нет доступных мест на данное событие.");
+                }
 
-            return Task.FromResult(ToBookingInfo(booking));
+                _eventRepository.Update(ev);
+
+                var booking = new Booking(eventId);
+                _bookingRepository.Add(booking);
+
+                return Task.FromResult(ToBookingInfo(booking));
+            }
         }
 
         public Task<BookingInfo> GetBookingByIdAsync(Guid bookingId)

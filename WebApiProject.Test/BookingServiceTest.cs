@@ -19,9 +19,7 @@ namespace WebApiProject.Test
             _eventService = new EventService(_eventRepository);
 
             _bookingRepository = new InMemoryBookingRepository();
-            _bookingService = new BookingService(
-                _bookingRepository,
-                _eventService);
+            _bookingService = new BookingService(_bookingRepository, _eventRepository);
 
             _event = new Event(
                 Guid.NewGuid(),
@@ -32,6 +30,21 @@ namespace WebApiProject.Test
                 10);
 
             _eventService.CreateEvent(_event);
+        }
+
+        private Event CreateTestEvent(int totalSeats = 10)
+        {
+            var ev = new Event(
+                Guid.NewGuid(),
+                "Test event",
+                null,
+                DateTime.UtcNow.AddHours(1),
+                DateTime.UtcNow.AddHours(2),
+                totalSeats);
+
+            _eventRepository.Add(ev);
+
+            return ev;
         }
 
         [Fact]
@@ -156,6 +169,92 @@ namespace WebApiProject.Test
 
             // Assert
             Assert.Contains(nonExistingBookingId.ToString(), exception.Message);
+        }
+
+        [Fact]
+        public async Task CreateBooking_ExistingEvent_DecreasesAvailableSeats()
+        {
+            // Arrange
+            var ev = CreateTestEvent(3);
+
+            // Act
+            await _bookingService.CreateBookingAsync(ev.Id);
+
+            // Assert
+            var updatedEvent = _eventRepository.GetById(ev.Id);
+
+            Assert.NotNull(updatedEvent);
+            Assert.Equal(2, updatedEvent.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task CreateBooking_NoAvailableSeats_ThrowsNoAvailableSeatsException()
+        {
+            // Arrange
+            var ev = CreateTestEvent(1);
+
+            await _bookingService.CreateBookingAsync(ev.Id);
+
+            // Act
+            var act = () => _bookingService.CreateBookingAsync(ev.Id);
+
+            // Assert
+            await Assert.ThrowsAsync<NoAvailableSeatsException>(act);
+
+            Assert.Equal(0, ev.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task CreateBooking_ConcurrentRequests_PreventsOverbooking()
+        {
+            // Arrange
+            var ev = CreateTestEvent(5);
+
+            var tasks = Enumerable.Range(0, 20)
+                .Select(_ => Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _bookingService.CreateBookingAsync(ev.Id);
+                        return true;
+                    }
+                    catch (NoAvailableSeatsException)
+                    {
+                        return false;
+                    }
+                }))
+                .ToArray();
+
+            // Act
+            var results = await Task.WhenAll(tasks);
+
+            // Assert
+            Assert.Equal(5, results.Count(result => result));
+            Assert.Equal(15, results.Count(result => !result));
+            Assert.Equal(0, ev.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task CreateBooking_ConcurrentRequests_CreatesUniqueIds()
+        {
+            // Arrange
+            var ev = CreateTestEvent(10);
+
+            var tasks = Enumerable.Range(0, 10)
+                .Select(_ => Task.Run(
+                    () => _bookingService.CreateBookingAsync(ev.Id)))
+                .ToArray();
+
+            // Act
+            var bookings = await Task.WhenAll(tasks);
+
+            // Assert
+            Assert.Equal(10, bookings.Length);
+            Assert.Equal(
+                10,
+                bookings.Select(booking => booking.Id).Distinct().Count());
+
+            Assert.Equal(0, ev.AvailableSeats);
         }
     }
 }

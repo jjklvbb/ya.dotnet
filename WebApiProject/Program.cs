@@ -30,7 +30,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IEventRepository, InMemoryEventRepository>();
 builder.Services.AddSingleton<IEventService, EventService>();
 builder.Services.AddSingleton<IBookingRepository, InMemoryBookingRepository>();
-builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddSingleton<IBookingService, BookingService>();
 builder.Services.AddHostedService<BookingBackgroundService>();
 
 var app = builder.Build();

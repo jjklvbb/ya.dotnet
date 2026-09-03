@@ -140,6 +140,7 @@ namespace WebApiProject.Controllers
         }
 
         [HttpPost("{id:guid}/book")]
+        [ProducesResponseType(typeof(Responses.ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> CreateBooking(Guid id)
         {
             var booking = await _bookingService.CreateBookingAsync(id);
