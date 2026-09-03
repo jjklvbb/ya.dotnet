@@ -7,30 +7,16 @@ namespace WebApiProject.Services
 {
     public class EventService : IEventService
     {
-        private readonly Dictionary<Guid, Event> _events = new ();
+        private readonly IEventRepository _eventRepository;
 
-        public EventService()
+        public EventService(IEventRepository eventRepository)
         {
-
-        }
-        public EventService (List<Event>? list)
-        {
-            if (list == null)
-            {
-                _events = new Dictionary<Guid, Event> ();
-            }
-            else
-            {
-                foreach (var item in list)
-                {
-                    _events.Add(item.Id, item);
-                }
-            }
+            _eventRepository = eventRepository;
         }
 
         public PagedResult<Event> GetEvents(EventFilterParameters filter, int page = 1, int pageSize = 10)
         {
-            IQueryable<Event> query = _events.Values.AsQueryable();
+            IQueryable<Event> query = _eventRepository.GetAll().AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(filter.Title))
             {
@@ -60,31 +46,32 @@ namespace WebApiProject.Services
 
         public Event GetEventById(Guid id)
         {
-            try
-            {
-                return _events[id]; // если не будет элемента - генерируется ошибка KeyNotFountException
-            }
-            catch(KeyNotFoundException)
-            {
-                throw new NotFoundException($"Событие по ключу {id} не найдено.");
-            }
+            return _eventRepository.GetById(id) ?? throw new NotFoundException($"Событие по ключу {id} не найдено.");
         }
 
         public void CreateEvent(Event newEvent)
         {
-            _events.Add(newEvent.Id, newEvent);
+            _eventRepository.Add(newEvent);
         }
 
-        public void UpdateEvent(Guid id, Event newEvent)
+        public void UpdateEvent( Guid id, string title, string? description, DateTime startAt, DateTime endAt)
         {
-            if (_events.ContainsKey(id))
-                _events[id] = newEvent;
-            else throw new NotFoundException($"Событие по ключу {id} не найдено.");
+            var existingEvent = _eventRepository.GetById(id)
+                ?? throw new NotFoundException(
+                    $"Событие по ключу {id} не найдено.");
+
+            existingEvent.Update(
+                title,
+                description,
+                startAt,
+                endAt);
+
+            _eventRepository.Update(existingEvent);
         }
 
         public void DeleteEvent(Guid id)
         {
-            if (!_events.Remove(id))
+            if (!_eventRepository.Delete(id))
                 throw new NotFoundException($"Событие по ключу {id} не найдено.");
         }
     }

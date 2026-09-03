@@ -50,6 +50,7 @@ namespace WebApiProject.Middlewares
             {
                 StatusCodes.Status400BadRequest => "Bad request",
                 StatusCodes.Status404NotFound => "Resource not found",
+                StatusCodes.Status409Conflict => "Conflict",
                 StatusCodes.Status500InternalServerError => "Internal server error",
                 _ => "Error"
             };
@@ -69,8 +70,9 @@ namespace WebApiProject.Middlewares
             => ex switch
             {
                 ValidationException => StatusCodes.Status400BadRequest,
-                NotFoundException => StatusCodes.Status404NotFound,
                 ArgumentException => StatusCodes.Status400BadRequest,
+                NotFoundException => StatusCodes.Status404NotFound,
+                NoAvailableSeatsException => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status500InternalServerError
             };
     }

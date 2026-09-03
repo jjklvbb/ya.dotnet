@@ -13,7 +13,8 @@ namespace WebApiProject.Test
                     "",
                     "Описание",
                     DateTime.Now.AddDays(1),
-                    DateTime.Now.AddDays(2)));
+                    DateTime.Now.AddDays(2),
+                    10));
         }
 
         [Fact]
@@ -25,7 +26,21 @@ namespace WebApiProject.Test
                     "Новое название",
                     "Описание",
                     DateTime.Now.AddDays(2),
-                    DateTime.Now.AddDays(1)));
+                    DateTime.Now.AddDays(1),
+                    10));
+        }
+
+        [Fact]
+        public void Constructor_TotalSeatsLessThanOrEqualToZero_ThrowsValidationException()
+        {
+            Assert.Throws<WebApiProject.Exceptions.ValidationException>(() =>
+                new Event(
+                    Guid.NewGuid(),
+                    "Событие",
+                    "Описание",
+                    DateTime.Now.AddDays(1),
+                    DateTime.Now.AddDays(2),
+                    0));
         }
     }
 }
