@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 using WebApiProject.BackgroundServices;
 using WebApiProject.DataAccess;
 using WebApiProject.Interfaces;
@@ -13,36 +14,55 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowCORS",
         policy =>
         {
-            policy.WithOrigins("https://localhost:7221", "http://localhost:5168")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
+            policy.WithOrigins(
+                    "https://localhost:7221",
+                    "http://localhost:5168")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
         });
 });
 
 builder.Services.AddOpenApi();
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter());
+    });
+
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
 });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<IEventRepository, InMemoryEventRepository>();
-builder.Services.AddSingleton<IEventService, EventService>();
-builder.Services.AddSingleton<IBookingRepository, InMemoryBookingRepository>();
-builder.Services.AddSingleton<IBookingService, BookingService>();
-builder.Services.AddHostedService<BookingBackgroundService>();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+
+builder.Services.AddHostedService<BookingBackgroundService>();
+
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
+
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("AllowCORS");
+
 app.MapControllers();
 
 if (app.Environment.IsDevelopment())

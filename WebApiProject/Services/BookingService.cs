@@ -1,4 +1,6 @@
-﻿using WebApiProject.DTOs;
+﻿using Microsoft.EntityFrameworkCore;
+using WebApiProject.DataAccess;
+using WebApiProject.DTOs;
 using WebApiProject.Entities;
 using WebApiProject.Exceptions;
 using WebApiProject.Interfaces;
@@ -7,48 +9,55 @@ namespace WebApiProject.Services
 {
     public class BookingService : IBookingService
     {
-        private readonly IBookingRepository _bookingRepository;
-        private readonly IEventRepository _eventRepository;
-        private readonly object _bookingLock = new();
+        private readonly AppDbContext _context;
 
-        public BookingService(
-            IBookingRepository bookingRepository,
-            IEventRepository eventRepository)
+        private static readonly SemaphoreSlim BookingSemaphore = new(1, 1);
+
+        public BookingService(AppDbContext context)
         {
-            _bookingRepository = bookingRepository;
-            _eventRepository = eventRepository;
+            _context = context;
         }
 
-        public Task<BookingInfo> CreateBookingAsync(Guid eventId)
+        public async Task<BookingInfo> CreateBookingAsync(Guid eventId)
         {
-            lock (_bookingLock)
+            await BookingSemaphore.WaitAsync();
+
+            try
             {
-                var ev = _eventRepository.GetById(eventId)
+                var ev = await _context.Events
+                    .FirstOrDefaultAsync(e => e.Id == eventId)
                     ?? throw new NotFoundException(
                         $"Событие по ключу {eventId} не найдено.");
 
                 if (!ev.TryReserveSeats())
                 {
                     throw new NoAvailableSeatsException(
-                        "No available seats for this event.");
+                        "No available seats for this event");
                 }
 
-                _eventRepository.Update(ev);
-
                 var booking = new Booking(eventId);
-                _bookingRepository.Add(booking);
 
-                return Task.FromResult(ToBookingInfo(booking));
+                _context.Bookings.Add(booking);
+
+                await _context.SaveChangesAsync();
+
+                return ToBookingInfo(booking);
+            }
+            finally
+            {
+                BookingSemaphore.Release();
             }
         }
 
-        public Task<BookingInfo> GetBookingByIdAsync(Guid bookingId)
+        public async Task<BookingInfo> GetBookingByIdAsync(Guid bookingId)
         {
-            var booking = _bookingRepository.GetById(bookingId)
+            var booking = await _context.Bookings
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.Id == bookingId)
                 ?? throw new NotFoundException(
                     $"Бронь по ключу {bookingId} не найдена.");
 
-            return Task.FromResult(ToBookingInfo(booking));
+            return ToBookingInfo(booking);
         }
 
         private static BookingInfo ToBookingInfo(Booking booking)
