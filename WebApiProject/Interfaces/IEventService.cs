@@ -11,7 +11,7 @@ namespace WebApiProject.Interfaces
 
         void CreateEvent(Event newEvent);
 
-        void UpdateEvent(Guid id, Event newEvent);
+        void UpdateEvent(Guid id, string title, string? description, DateTime startAt, DateTime endAt);
 
         void DeleteEvent(Guid id);
     }

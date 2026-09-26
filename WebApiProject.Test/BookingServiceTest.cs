@@ -7,6 +7,7 @@ namespace WebApiProject.Test
 {
     public class BookingServiceTest
     {
+        private readonly InMemoryEventRepository _eventRepository;
         private readonly EventService _eventService;
         private readonly InMemoryBookingRepository _bookingRepository;
         private readonly BookingService _bookingService;
@@ -14,20 +15,36 @@ namespace WebApiProject.Test
 
         public BookingServiceTest()
         {
-            _eventService = new EventService();
+            _eventRepository = new InMemoryEventRepository();
+            _eventService = new EventService(_eventRepository);
+
             _bookingRepository = new InMemoryBookingRepository();
-            _bookingService = new BookingService(
-                _bookingRepository,
-                _eventService);
+            _bookingService = new BookingService(_bookingRepository, _eventRepository);
 
             _event = new Event(
                 Guid.NewGuid(),
                 "Test event",
                 null,
                 DateTime.UtcNow.AddHours(1),
-                DateTime.UtcNow.AddHours(2));
+                DateTime.UtcNow.AddHours(2),
+                10);
 
             _eventService.CreateEvent(_event);
+        }
+
+        private Event CreateTestEvent(int totalSeats = 10)
+        {
+            var ev = new Event(
+                Guid.NewGuid(),
+                "Test event",
+                null,
+                DateTime.UtcNow.AddHours(1),
+                DateTime.UtcNow.AddHours(2),
+                totalSeats);
+
+            _eventRepository.Add(ev);
+
+            return ev;
         }
 
         [Fact]
@@ -152,6 +169,149 @@ namespace WebApiProject.Test
 
             // Assert
             Assert.Contains(nonExistingBookingId.ToString(), exception.Message);
+        }
+
+        [Fact]
+        public async Task CreateBooking_ExistingEvent_DecreasesAvailableSeats()
+        {
+            // Arrange
+            var ev = CreateTestEvent(3);
+
+            // Act
+            await _bookingService.CreateBookingAsync(ev.Id);
+
+            // Assert
+            var updatedEvent = _eventRepository.GetById(ev.Id);
+
+            Assert.NotNull(updatedEvent);
+            Assert.Equal(2, updatedEvent.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task CreateBooking_NoAvailableSeats_ThrowsNoAvailableSeatsException()
+        {
+            // Arrange
+            var ev = CreateTestEvent(1);
+
+            await _bookingService.CreateBookingAsync(ev.Id);
+
+            // Act
+            var act = () => _bookingService.CreateBookingAsync(ev.Id);
+
+            // Assert
+            await Assert.ThrowsAsync<NoAvailableSeatsException>(act);
+
+            Assert.Equal(0, ev.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task CreateBooking_ConcurrentRequests_PreventsOverbooking()
+        {
+            // Arrange
+            var ev = CreateTestEvent(5);
+
+            var tasks = Enumerable.Range(0, 20)
+                .Select(_ => Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _bookingService.CreateBookingAsync(ev.Id);
+                        return true;
+                    }
+                    catch (NoAvailableSeatsException)
+                    {
+                        return false;
+                    }
+                }))
+                .ToArray();
+
+            // Act
+            var results = await Task.WhenAll(tasks);
+
+            // Assert
+            Assert.Equal(5, results.Count(result => result));
+            Assert.Equal(15, results.Count(result => !result));
+            Assert.Equal(0, ev.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task CreateBooking_ConcurrentRequests_CreatesUniqueIds()
+        {
+            // Arrange
+            var ev = CreateTestEvent(10);
+
+            var tasks = Enumerable.Range(0, 10)
+                .Select(_ => Task.Run(
+                    () => _bookingService.CreateBookingAsync(ev.Id)))
+                .ToArray();
+
+            // Act
+            var bookings = await Task.WhenAll(tasks);
+
+            // Assert
+            Assert.Equal(10, bookings.Length);
+            Assert.Equal(
+                10,
+                bookings.Select(booking => booking.Id).Distinct().Count());
+
+            Assert.Equal(0, ev.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task RejectBooking_ReleaseSeats_RestoresAvailableSeats()
+        {
+            // Arrange
+            var ev = CreateTestEvent(1);
+
+            var bookingInfo = await _bookingService.CreateBookingAsync(ev.Id);
+
+            Assert.Equal(0, ev.AvailableSeats);
+
+            var booking = _bookingRepository.GetById(bookingInfo.Id);
+
+            Assert.NotNull(booking);
+
+            // Act
+            booking.Reject();
+            _bookingRepository.Update(booking);
+
+            ev.ReleaseSeats();
+            _eventRepository.Update(ev);
+
+            // Assert
+            Assert.Equal(BookingStatus.Rejected, booking.Status);
+            Assert.Equal(1, ev.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task RejectBooking_ReleaseSeats_AllowsNewBooking()
+        {
+            // Arrange
+            var ev = CreateTestEvent(1);
+
+            var firstBookingInfo =
+                await _bookingService.CreateBookingAsync(ev.Id);
+
+            var firstBooking =
+                _bookingRepository.GetById(firstBookingInfo.Id);
+
+            Assert.NotNull(firstBooking);
+
+            firstBooking.Reject();
+            _bookingRepository.Update(firstBooking);
+
+            ev.ReleaseSeats();
+            _eventRepository.Update(ev);
+
+            // Act
+            var secondBooking =
+                await _bookingService.CreateBookingAsync(ev.Id);
+
+            // Assert
+            Assert.NotNull(secondBooking);
+            Assert.Equal(BookingStatus.Pending, secondBooking.Status);
+            Assert.NotEqual(firstBooking.Id, secondBooking.Id);
+            Assert.Equal(0, ev.AvailableSeats);
         }
     }
 }
