@@ -22,6 +22,10 @@ namespace WebApiProject.Entities
 
         public int AvailableSeats { get; private set; }
 
+        public ICollection<Booking> Bookings { get; private set; } = new List<Booking>();
+
+        private Event() { }
+
         public Event(Guid id, string title, string? description, DateTime startAt, DateTime endAt, int totalSeats)
         {
             if (string.IsNullOrWhiteSpace(title))

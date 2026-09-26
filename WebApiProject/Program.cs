@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WebApiProject.BackgroundServices;
 using WebApiProject.DataAccess;
 using WebApiProject.Interfaces;
@@ -32,6 +33,9 @@ builder.Services.AddSingleton<IEventService, EventService>();
 builder.Services.AddSingleton<IBookingRepository, InMemoryBookingRepository>();
 builder.Services.AddSingleton<IBookingService, BookingService>();
 builder.Services.AddHostedService<BookingBackgroundService>();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 

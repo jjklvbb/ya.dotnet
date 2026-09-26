@@ -1,18 +1,23 @@
-﻿using WebApiProject.Entities;
-using WebApiProject.DTOs;
+﻿using WebApiProject.DTOs;
+using WebApiProject.Entities;
 
-namespace WebApiProject.Interfaces
+public interface IEventService
 {
-    public interface IEventService
-    {
-        PagedResult<Event> GetEvents(EventFilterParameters filter, int page, int pageSize);
+    Task<PagedResult<Event>> GetEventsAsync(
+        EventFilterParameters filter,
+        int page,
+        int pageSize);
 
-        Event GetEventById(Guid id);
+    Task<Event> GetEventByIdAsync(Guid id);
 
-        void CreateEvent(Event newEvent);
+    Task CreateEventAsync(Event newEvent);
 
-        void UpdateEvent(Guid id, string title, string? description, DateTime startAt, DateTime endAt);
+    Task UpdateEventAsync(
+        Guid id,
+        string title,
+        string? description,
+        DateTime startAt,
+        DateTime endAt);
 
-        void DeleteEvent(Guid id);
-    }
+    Task DeleteEventAsync(Guid id);
 }
