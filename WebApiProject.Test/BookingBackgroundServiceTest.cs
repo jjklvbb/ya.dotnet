@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging.Abstractions;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using WebApiProject.BackgroundServices;
 using WebApiProject.DataAccess;
 using WebApiProject.Entities;
@@ -11,25 +13,45 @@ namespace WebApiProject.Test
         public async Task BackgroundService_ProcessesPendingBooking()
         {
             // Arrange
-            var bookingRepository = new InMemoryBookingRepository();
-            var eventRepository = new InMemoryEventRepository();
+            var dbName = Guid.NewGuid().ToString();
 
-            var ev = new Event(
-                Guid.NewGuid(),
-                "Test event",
-                null,
-                DateTime.UtcNow.AddHours(1),
-                DateTime.UtcNow.AddHours(2),
-                1);
+            var services = new ServiceCollection();
 
-            eventRepository.Add(ev);
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseInMemoryDatabase(dbName));
 
-            var booking = new Booking(ev.Id);
-            bookingRepository.Add(booking);
+            using var serviceProvider = services.BuildServiceProvider();
+
+            Guid bookingId;
+
+            using (var scope = serviceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider
+                    .GetRequiredService<AppDbContext>();
+
+                var ev = new Event(
+                    Guid.NewGuid(),
+                    "Test event",
+                    null,
+                    DateTime.UtcNow.AddHours(1),
+                    DateTime.UtcNow.AddHours(2),
+                    1);
+
+                var booking = new Booking(ev.Id);
+
+                context.Events.Add(ev);
+                context.Bookings.Add(booking);
+
+                await context.SaveChangesAsync();
+
+                bookingId = booking.Id;
+            }
+
+            var scopeFactory = serviceProvider
+                .GetRequiredService<IServiceScopeFactory>();
 
             var service = new BookingBackgroundService(
-                bookingRepository,
-                eventRepository,
+                scopeFactory,
                 NullLogger<BookingBackgroundService>.Instance);
 
             // Act
@@ -39,10 +61,16 @@ namespace WebApiProject.Test
 
             await service.StopAsync(CancellationToken.None);
 
-            var result = bookingRepository.GetById(booking.Id);
-
             // Assert
-            Assert.NotNull(result);
+            using var assertScope = serviceProvider.CreateScope();
+
+            var assertContext = assertScope.ServiceProvider
+                .GetRequiredService<AppDbContext>();
+
+            var result = await assertContext.Bookings
+                .AsNoTracking()
+                .SingleAsync(b => b.Id == bookingId);
+
             Assert.Equal(BookingStatus.Confirmed, result.Status);
             Assert.NotNull(result.ProcessedAt);
         }
@@ -51,15 +79,36 @@ namespace WebApiProject.Test
         public async Task BackgroundService_EventDoesNotExist_RejectsBooking()
         {
             // Arrange
-            var bookingRepository = new InMemoryBookingRepository();
-            var eventRepository = new InMemoryEventRepository();
+            var dbName = Guid.NewGuid().ToString();
 
-            var booking = new Booking(Guid.NewGuid());
-            bookingRepository.Add(booking);
+            var services = new ServiceCollection();
+
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseInMemoryDatabase(dbName));
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            Guid bookingId;
+
+            using (var scope = serviceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider
+                    .GetRequiredService<AppDbContext>();
+
+                var booking = new Booking(Guid.NewGuid());
+
+                context.Bookings.Add(booking);
+
+                await context.SaveChangesAsync();
+
+                bookingId = booking.Id;
+            }
+
+            var scopeFactory = serviceProvider
+                .GetRequiredService<IServiceScopeFactory>();
 
             var service = new BookingBackgroundService(
-                bookingRepository,
-                eventRepository,
+                scopeFactory,
                 NullLogger<BookingBackgroundService>.Instance);
 
             // Act
@@ -69,10 +118,16 @@ namespace WebApiProject.Test
 
             await service.StopAsync(CancellationToken.None);
 
-            var result = bookingRepository.GetById(booking.Id);
-
             // Assert
-            Assert.NotNull(result);
+            using var assertScope = serviceProvider.CreateScope();
+
+            var assertContext = assertScope.ServiceProvider
+                .GetRequiredService<AppDbContext>();
+
+            var result = await assertContext.Bookings
+                .AsNoTracking()
+                .SingleAsync(b => b.Id == bookingId);
+
             Assert.Equal(BookingStatus.Rejected, result.Status);
             Assert.NotNull(result.ProcessedAt);
         }

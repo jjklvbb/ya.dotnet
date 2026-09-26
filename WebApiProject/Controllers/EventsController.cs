@@ -102,7 +102,7 @@ namespace WebApiProject.Controllers
             };
 
             return CreatedAtAction(
-                nameof(GetEventById), // здесь твое реальное имя GET-метода
+                nameof(GetEventById),
                 new { id = ev.Id },
                 result);
         }

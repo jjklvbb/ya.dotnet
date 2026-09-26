@@ -1,19 +1,41 @@
 ﻿namespace WebApiProject.Test;
 
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using WebApiProject.DataAccess;
 using WebApiProject.DTOs;
 using WebApiProject.Entities;
 using WebApiProject.Exceptions;
+using WebApiProject.Interfaces;
 using WebApiProject.Services;
 
-public class EventServiceTest
+public class EventServiceTest : IDisposable
 {
-    private readonly InMemoryEventRepository _eventRepository;
-    private readonly EventService _eventService;
+    private readonly ServiceProvider _serviceProvider;
+    private readonly IServiceScope _scope;
+    private readonly IEventService _eventService;
     private readonly List<Event> _events;
 
     public EventServiceTest()
     {
+        var dbName = Guid.NewGuid().ToString();
+
+        var services = new ServiceCollection();
+
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName));
+
+        services.AddScoped<IEventService, EventService>();
+
+        _serviceProvider = services.BuildServiceProvider();
+        _scope = _serviceProvider.CreateScope();
+
+        _eventService = _scope.ServiceProvider
+            .GetRequiredService<IEventService>();
+
+        var context = _scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
+
         _events =
         [
             new Event(
@@ -41,14 +63,8 @@ public class EventServiceTest
                 10)
         ];
 
-        _eventRepository = new InMemoryEventRepository();
-
-        foreach (var item in _events)
-        {
-            _eventRepository.Add(item);
-        }
-
-        _eventService = new EventService(_eventRepository);
+        context.Events.AddRange(_events);
+        context.SaveChanges();
     }
 
     // ==========================================
@@ -56,28 +72,38 @@ public class EventServiceTest
     // ==========================================
 
     [Fact]
-    public void CreateEvent_ValidEvent_AddsToCollection() //создание события;
+    public async Task CreateEvent_ValidEvent_AddsToDatabase()
     {
         // Arrange
         var newId = Guid.NewGuid();
-        var newEvent = new Event(newId, "Новое событие", "Описание", DateTime.Now.AddDays(1), DateTime.Now.AddDays(2), 10);
+
+        var newEvent = new Event(
+            newId,
+            "Новое событие",
+            "Описание",
+            DateTime.Now.AddDays(1),
+            DateTime.Now.AddDays(2),
+            10);
 
         // Act
-        _eventService.CreateEvent(newEvent);
-        var result = _eventService.GetEventById(newId);
+        await _eventService.CreateEventAsync(newEvent);
+
+        var result = await _eventService.GetEventByIdAsync(newId);
 
         // Assert
         Assert.Equal("Новое событие", result.Title);
+        Assert.Equal(10, result.TotalSeats);
+        Assert.Equal(10, result.AvailableSeats);
     }
 
     [Fact]
-    public void GetEvents_NoFilter_ReturnsAllEvents() //получение всех событий;
+    public async Task GetEvents_NoFilter_ReturnsAllEvents()
     {
         // Arrange
         var filter = new EventFilterParameters();
 
         // Act
-        var result = _eventService.GetEvents(filter);
+        var result = await _eventService.GetEventsAsync(filter, 1, 10);
 
         // Assert
         Assert.Equal(3, result.TotalItems);
@@ -85,27 +111,33 @@ public class EventServiceTest
     }
 
     [Fact]
-    public void GetEventById_ExistingId_ReturnsCorrectEvent() //получение события по ID;
+    public async Task GetEventById_ExistingId_ReturnsCorrectEvent()
     {
         // Arrange
         var targetId = _events[0].Id;
 
         // Act
-        var result = _eventService.GetEventById(targetId);
+        var result = await _eventService.GetEventByIdAsync(targetId);
 
         // Assert
         Assert.Equal("Концерт Димы Билана", result.Title);
     }
 
     [Fact]
-    public void UpdateEvent_ExistingEvent_UpdatesSuccessfully() //обновление существующего события;
+    public async Task UpdateEvent_ExistingEvent_UpdatesSuccessfully()
     {
         // Arrange
         var idToUpdate = _events[0].Id;
 
         // Act
-        _eventService.UpdateEvent(idToUpdate, "Новое название", "Обновленное описание", new DateTime(2026, 11, 1), new DateTime(2026, 11, 2));
-        var result = _eventService.GetEventById(idToUpdate);
+        await _eventService.UpdateEventAsync(
+            idToUpdate,
+            "Новое название",
+            "Обновленное описание",
+            new DateTime(2026, 11, 1),
+            new DateTime(2026, 11, 2));
+
+        var result = await _eventService.GetEventByIdAsync(idToUpdate);
 
         // Assert
         Assert.Equal("Новое название", result.Title);
@@ -114,64 +146,77 @@ public class EventServiceTest
     }
 
     [Fact]
-    public void DeleteEvent_ExistingEvent_DeletesSuccessfully()
+    public async Task DeleteEvent_ExistingEvent_DeletesSuccessfully()
     {
         // Arrange
         var idToDelete = _events[1].Id;
 
         // Act
-        _eventService.DeleteEvent(idToDelete);
+        await _eventService.DeleteEventAsync(idToDelete);
 
         // Assert
-        Assert.Throws<NotFoundException>(() => _eventService.GetEventById(idToDelete));
+        await Assert.ThrowsAsync<NotFoundException>(
+            () => _eventService.GetEventByIdAsync(idToDelete));
     }
 
     [Fact]
-    public void GetEvents_WithTitleFilter_ReturnsMatchingEventsCaseInsensitive() //фильтрация по названию;
+    public async Task GetEvents_WithTitleFilter_ReturnsMatchingEventsCaseInsensitive()
     {
         // Arrange
-        var filter = new EventFilterParameters { Title = "концерт" }; // Маленькие буквы
+        var filter = new EventFilterParameters
+        {
+            Title = "концерт"
+        };
 
         // Act
-        var result = _eventService.GetEvents(filter);
+        var result = await _eventService.GetEventsAsync(filter, 1, 10);
 
         // Assert
         Assert.Single(result.Items);
-        Assert.Equal("Концерт Димы Билана", result.Items.First().Title);
+        Assert.Equal(
+            "Концерт Димы Билана",
+            result.Items.First().Title);
     }
 
     [Fact]
-    public void GetEvents_WithDateFilter_ReturnsMultipleMatchingEvents()
+    public async Task GetEvents_WithDateFilter_ReturnsMultipleMatchingEvents()
     {
         // Arrange
         var filter = new EventFilterParameters
         {
             From = new DateTime(2026, 7, 1),
-            To = new DateTime(2026, 8, 31) 
+            To = new DateTime(2026, 8, 31)
         };
 
         // Act
-        var result = _eventService.GetEvents(filter);
+        var result = await _eventService.GetEventsAsync(filter, 1, 10);
 
         // Assert
         Assert.Equal(2, result.TotalItems);
         Assert.Equal(2, result.Items.Count());
 
-        var titles = result.Items.Select(e => e.Title).ToList();
+        var titles = result.Items
+            .Select(e => e.Title)
+            .ToList();
+
         Assert.Contains("Встреча с одногруппниками", titles);
         Assert.Contains("Тимбилдинг", titles);
     }
 
     [Fact]
-    public void GetEvents_WithPagination_ReturnsCorrectPageAndTotals() //пагинация событий;
+    public async Task GetEvents_WithPagination_ReturnsCorrectPageAndTotals()
     {
         // Arrange
         var filter = new EventFilterParameters();
-        int page = 1;
-        int pageSize = 2;
+
+        const int page = 1;
+        const int pageSize = 2;
 
         // Act
-        var result = _eventService.GetEvents(filter, page, pageSize);
+        var result = await _eventService.GetEventsAsync(
+            filter,
+            page,
+            pageSize);
 
         // Assert
         Assert.Equal(2, result.Items.Count());
@@ -181,7 +226,7 @@ public class EventServiceTest
     }
 
     [Fact]
-    public void GetEvents_WithCombinedFilter_ReturnsMatchingEvents() //комбинированная фильтрация.
+    public async Task GetEvents_WithCombinedFilter_ReturnsMatchingEvents()
     {
         // Arrange
         var filter = new EventFilterParameters
@@ -192,7 +237,7 @@ public class EventServiceTest
         };
 
         // Act
-        var result = _eventService.GetEvents(filter);
+        var result = await _eventService.GetEventsAsync(filter, 1, 10);
 
         // Assert
         Assert.Single(result.Items);
@@ -203,28 +248,35 @@ public class EventServiceTest
     // ==========================================
 
     [Fact]
-    public void GetEventById_NonExistingId_ThrowsNotFoundException() //попытка получить событие с несуществующим ID;
+    public async Task GetEventById_NonExistingId_ThrowsNotFoundException()
     {
         // Arrange
         var fakeId = Guid.NewGuid();
 
-        // Act
-        Action act = () => _eventService.GetEventById(fakeId);
-
-        // Assert
-        Assert.Throws<NotFoundException>(act);
+        // Act + Assert
+        await Assert.ThrowsAsync<NotFoundException>(
+            () => _eventService.GetEventByIdAsync(fakeId));
     }
 
     [Fact]
-    public void UpdateEvent_NonExistingId_ThrowsNotFoundException() //попытка обновить событие с несуществующим ID;
+    public async Task UpdateEvent_NonExistingId_ThrowsNotFoundException()
     {
         // Arrange
         var fakeId = Guid.NewGuid();
 
-        // Act
-        Action act = () => _eventService.UpdateEvent(fakeId, "Title", "Desc", DateTime.Now, DateTime.Now.AddDays(1));
+        // Act + Assert
+        await Assert.ThrowsAsync<NotFoundException>(
+            () => _eventService.UpdateEventAsync(
+                fakeId,
+                "Title",
+                "Desc",
+                DateTime.Now,
+                DateTime.Now.AddDays(1)));
+    }
 
-        // Assert
-        Assert.Throws<NotFoundException>(act);
+    public void Dispose()
+    {
+        _scope.Dispose();
+        _serviceProvider.Dispose();
     }
 }
