@@ -1,8 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using WebApiProject.DataAccess;
-using WebApiProject.Entities;
+﻿using WebApiProject.Entities;
+using WebApiProject.Interfaces;
 
-namespace WebApiProject.BackgroundServices
+namespace WebApiProject.Services
 {
     public class BookingBackgroundService : BackgroundService
     {
@@ -30,26 +29,28 @@ namespace WebApiProject.BackgroundServices
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    List<Guid> pendingBookingIds;
+                    IReadOnlyList<Guid> pendingBookingIds;
 
                     using (var scope = _scopeFactory.CreateScope())
                     {
-                        var context = scope.ServiceProvider
-                            .GetRequiredService<AppDbContext>();
+                        var bookingRepository = scope.ServiceProvider
+                            .GetRequiredService<IBookingRepository>();
 
-                        pendingBookingIds = await context.Bookings
-                            .AsNoTracking()
-                            .Where(b => b.Status == BookingStatus.Pending)
-                            .Select(b => b.Id)
-                            .ToListAsync(stoppingToken);
+                        pendingBookingIds =
+                            await bookingRepository.GetPendingIdsAsync(
+                                stoppingToken);
                     }
 
                     var tasks = pendingBookingIds
-                        .Select(id => ProcessBookingAsync(id, stoppingToken));
+                        .Select(id => ProcessBookingAsync(
+                            id,
+                            stoppingToken));
 
                     await Task.WhenAll(tasks);
 
-                    await Task.Delay(PollingInterval, stoppingToken);
+                    await Task.Delay(
+                        PollingInterval,
+                        stoppingToken);
                 }
             }
             catch (OperationCanceledException)
@@ -66,17 +67,21 @@ namespace WebApiProject.BackgroundServices
         {
             try
             {
-                await Task.Delay(ProcessingDelay, stoppingToken);
+                await Task.Delay(
+                    ProcessingDelay,
+                    stoppingToken);
 
                 using var scope = _scopeFactory.CreateScope();
 
-                var context = scope.ServiceProvider
-                    .GetRequiredService<AppDbContext>();
+                var bookingRepository = scope.ServiceProvider
+                    .GetRequiredService<IBookingRepository>();
 
-                var booking = await context.Bookings
-                    .FirstOrDefaultAsync(
-                        b => b.Id == bookingId,
-                        stoppingToken);
+                var eventRepository = scope.ServiceProvider
+                    .GetRequiredService<IEventRepository>();
+
+                var booking = await bookingRepository.GetByIdAsync(
+                    bookingId,
+                    stoppingToken);
 
                 if (booking == null)
                 {
@@ -87,16 +92,16 @@ namespace WebApiProject.BackgroundServices
                     return;
                 }
 
-                var ev = await context.Events
-                    .FirstOrDefaultAsync(
-                        e => e.Id == booking.EventId,
-                        stoppingToken);
+                var ev = await eventRepository.GetByIdAsync(
+                    booking.EventId,
+                    stoppingToken);
 
                 if (ev == null)
                 {
                     booking.Reject();
 
-                    await context.SaveChangesAsync(stoppingToken);
+                    await bookingRepository.SaveChangesAsync(
+                        stoppingToken);
 
                     _logger.LogWarning(
                         "Booking {BookingId} rejected because event {EventId} no longer exists",
@@ -108,7 +113,8 @@ namespace WebApiProject.BackgroundServices
 
                 booking.Confirm();
 
-                await context.SaveChangesAsync(stoppingToken);
+                await bookingRepository.SaveChangesAsync(
+                    stoppingToken);
 
                 _logger.LogInformation(
                     "Booking {BookingId} confirmed",
@@ -140,13 +146,15 @@ namespace WebApiProject.BackgroundServices
         {
             using var scope = _scopeFactory.CreateScope();
 
-            var context = scope.ServiceProvider
-                .GetRequiredService<AppDbContext>();
+            var bookingRepository = scope.ServiceProvider
+                .GetRequiredService<IBookingRepository>();
 
-            var booking = await context.Bookings
-                .FirstOrDefaultAsync(
-                    b => b.Id == bookingId,
-                    stoppingToken);
+            var eventRepository = scope.ServiceProvider
+                .GetRequiredService<IEventRepository>();
+
+            var booking = await bookingRepository.GetByIdAsync(
+                bookingId,
+                stoppingToken);
 
             if (booking == null)
             {
@@ -155,17 +163,17 @@ namespace WebApiProject.BackgroundServices
 
             booking.Reject();
 
-            var ev = await context.Events
-                .FirstOrDefaultAsync(
-                    e => e.Id == booking.EventId,
-                    stoppingToken);
+            var ev = await eventRepository.GetByIdAsync(
+                booking.EventId,
+                stoppingToken);
 
             if (ev != null)
             {
                 ev.ReleaseSeats();
             }
 
-            await context.SaveChangesAsync(stoppingToken);
+            await bookingRepository.SaveChangesAsync(
+                stoppingToken);
         }
     }
 }

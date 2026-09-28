@@ -4,9 +4,18 @@ namespace WebApiProject.Interfaces
 {
     public interface IBookingRepository
     {
-        void Add(Booking booking);
-        Booking? GetById(Guid id);
-        IEnumerable<Booking> GetPending();
-        void Update(Booking booking);
+        Task<Booking?> GetByIdAsync(
+            Guid id,
+            CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<Guid>> GetPendingIdsAsync(
+            CancellationToken cancellationToken = default);
+
+        Task AddAsync(
+            Booking booking,
+            CancellationToken cancellationToken = default);
+
+        Task SaveChangesAsync(
+            CancellationToken cancellationToken = default);
     }
 }

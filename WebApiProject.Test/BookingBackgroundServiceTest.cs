@@ -1,9 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
-using WebApiProject.BackgroundServices;
 using WebApiProject.DataAccess;
 using WebApiProject.Entities;
+using WebApiProject.Interfaces;
+using WebApiProject.Services;
 
 namespace WebApiProject.Test
 {
@@ -19,6 +20,9 @@ namespace WebApiProject.Test
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase(dbName));
+
+            services.AddScoped<IEventRepository, EventRepository>();
+            services.AddScoped<IBookingRepository, BookingRepository>();
 
             using var serviceProvider = services.BuildServiceProvider();
 
@@ -85,6 +89,9 @@ namespace WebApiProject.Test
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase(dbName));
+
+            services.AddScoped<IEventRepository, EventRepository>();
+            services.AddScoped<IBookingRepository, BookingRepository>();
 
             using var serviceProvider = services.BuildServiceProvider();
 
