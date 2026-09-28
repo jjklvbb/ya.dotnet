@@ -1,26 +1,30 @@
-﻿using WebApiProject.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using WebApiProject.DataAccess;
+using WebApiProject.DTOs;
+using WebApiProject.Entities;
 using WebApiProject.Exceptions;
 using WebApiProject.Interfaces;
-using WebApiProject.DTOs;
 
 namespace WebApiProject.Services
 {
     public class EventService : IEventService
     {
-        private readonly IEventRepository _eventRepository;
+        private readonly AppDbContext _context;
 
-        public EventService(IEventRepository eventRepository)
+        public EventService(AppDbContext context)
         {
-            _eventRepository = eventRepository;
+            _context = context;
         }
 
-        public PagedResult<Event> GetEvents(EventFilterParameters filter, int page = 1, int pageSize = 10)
+        public async Task<PagedResult<Event>> GetEventsAsync(EventFilterParameters filter, int page = 1, int pageSize = 10)
         {
-            IQueryable<Event> query = _eventRepository.GetAll().AsQueryable();
+            IQueryable<Event> query = _context.Events.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(filter.Title))
             {
-                query = query.Where(e => e.Title.Contains(filter.Title, StringComparison.OrdinalIgnoreCase));
+                var title = filter.Title.ToLower();
+
+                query = query.Where(e => e.Title.ToLower().Contains(title));
             }
 
             if (filter.From.HasValue)
@@ -33,30 +37,41 @@ namespace WebApiProject.Services
                 query = query.Where(e => e.EndAt <= filter.To.Value);
             }
 
-            int totalItems = query.Count();
+            int totalItems = await query.CountAsync();
 
-            var items = query
+            var items = await query
                 .OrderByDescending(e => e.StartAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToList();
+                .ToListAsync();
 
-            return new PagedResult<Event>(items, page, items.Count, totalItems);
+            return new PagedResult<Event>(
+                items,
+                page,
+                items.Count,
+                totalItems);
         }
 
-        public Event GetEventById(Guid id)
+        public async Task<Event> GetEventByIdAsync(Guid id)
         {
-            return _eventRepository.GetById(id) ?? throw new NotFoundException($"Событие по ключу {id} не найдено.");
+            return await _context.Events
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == id)
+                ?? throw new NotFoundException(
+                    $"Событие по ключу {id} не найдено.");
         }
 
-        public void CreateEvent(Event newEvent)
+        public async Task CreateEventAsync(Event newEvent)
         {
-            _eventRepository.Add(newEvent);
+            _context.Events.Add(newEvent);
+
+            await _context.SaveChangesAsync();
         }
 
-        public void UpdateEvent( Guid id, string title, string? description, DateTime startAt, DateTime endAt)
+        public async Task UpdateEventAsync(Guid id, string title, string? description, DateTime startAt, DateTime endAt)
         {
-            var existingEvent = _eventRepository.GetById(id)
+            var existingEvent = await _context.Events
+                .FirstOrDefaultAsync(e => e.Id == id)
                 ?? throw new NotFoundException(
                     $"Событие по ключу {id} не найдено.");
 
@@ -66,13 +81,19 @@ namespace WebApiProject.Services
                 startAt,
                 endAt);
 
-            _eventRepository.Update(existingEvent);
+            await _context.SaveChangesAsync();
         }
 
-        public void DeleteEvent(Guid id)
+        public async Task DeleteEventAsync(Guid id)
         {
-            if (!_eventRepository.Delete(id))
-                throw new NotFoundException($"Событие по ключу {id} не найдено.");
+            var existingEvent = await _context.Events
+                .FirstOrDefaultAsync(e => e.Id == id)
+                ?? throw new NotFoundException(
+                    $"Событие по ключу {id} не найдено.");
+
+            _context.Events.Remove(existingEvent);
+
+            await _context.SaveChangesAsync();
         }
     }
 }

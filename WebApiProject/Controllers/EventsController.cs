@@ -25,7 +25,7 @@ namespace WebApiProject.Controllers
 
         //GET /events — получить список событий (с поддержкой фильтрации и пагинации);
         [HttpGet]
-        public IActionResult GetEvents(
+        public async Task<IActionResult> GetEvents(
             [FromQuery] EventFilterParameters filter,
             [FromQuery, Range(1, int.MaxValue)] int page = 1,
             [FromQuery, Range(1, int.MaxValue)] int pageSize = 10)
@@ -43,7 +43,7 @@ namespace WebApiProject.Controllers
 
             var result = new ApiResult<PagedResult<Event>>
             {
-                Data = _eventService.GetEvents(filter, page, pageSize),
+                Data = await _eventService.GetEventsAsync(filter, page, pageSize),
                 Success = true,
                 StatusCode = HttpStatusCode.OK,
                 Message = "Получение списка всех событий"
@@ -54,9 +54,9 @@ namespace WebApiProject.Controllers
 
         //GET /events/{id} — получить событие по id; если не найдено — вернуть корректный HTTP - ответ(например, 404);
         [HttpGet("{id:Guid}")]
-        public IActionResult GetEventById(Guid id)
+        public async Task<IActionResult> GetEventById(Guid id)
         {
-            Event ev = _eventService.GetEventById(id);
+            Event ev = await _eventService.GetEventByIdAsync(id);
 
             var result = new ApiResult<Event>
                 {
@@ -71,7 +71,7 @@ namespace WebApiProject.Controllers
 
         //POST /events — создать событие, возвращать корректный HTTP-ответ(например, 201);
         [HttpPost]
-        public IActionResult Post([FromBody] CreateEventDTO newEvent)
+        public async Task<IActionResult> Post([FromBody] CreateEventDTO newEvent)
         {
             if (!ModelState.IsValid)
             {
@@ -91,21 +91,25 @@ namespace WebApiProject.Controllers
                 newEvent.EndAt,
                 newEvent.TotalSeats!.Value);
 
-            _eventService.CreateEvent(ev);
+            await _eventService.CreateEventAsync(ev);
 
-            var result = new ApiResult
+            var result = new ApiResult<Event>
             {
                 Success = true,
                 StatusCode = HttpStatusCode.Created,
-                Message = "Создание события"
+                Message = "Событие создано",
+                Data = ev
             };
 
-            return CreatedAtAction(nameof(GetEventById), new { id = ev.Id }, result);
+            return CreatedAtAction(
+                nameof(GetEventById),
+                new { id = ev.Id },
+                result);
         }
 
         //PUT /events/{id} — обновить событие целиком; если не найдено — вернуть корректный HTTP-ответ (например, 404);
         [HttpPut("{id:Guid}")]
-        public IActionResult Put(Guid id, [FromBody] UpdateEventDTO newEvent)
+        public async Task<IActionResult> Put(Guid id, [FromBody] UpdateEventDTO newEvent)
         {
             if (!ModelState.IsValid)
             {
@@ -117,7 +121,7 @@ namespace WebApiProject.Controllers
                 throw new Exceptions.ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
             }
 
-            _eventService.UpdateEvent(id, newEvent.Title, newEvent.Description, newEvent.StartAt, newEvent.EndAt);
+            await _eventService.UpdateEventAsync(id, newEvent.Title, newEvent.Description, newEvent.StartAt, newEvent.EndAt);
 
             var result = new ApiResult
             {
@@ -132,9 +136,9 @@ namespace WebApiProject.Controllers
 
         //DELETE /events/{id} — удалить событие; если не найдено — вернуть корректный HTTP-ответ (например, 404).
         [HttpDelete("{id:Guid}")]
-        public IActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            _eventService.DeleteEvent(id);
+            await _eventService.DeleteEventAsync(id);
 
             return NoContent();
         }
