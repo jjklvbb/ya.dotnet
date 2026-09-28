@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using WebApiProject.DataAccess;
-using WebApiProject.DTOs;
+﻿using WebApiProject.DTOs;
 using WebApiProject.Entities;
 using WebApiProject.Exceptions;
 using WebApiProject.Interfaces;
@@ -9,13 +7,17 @@ namespace WebApiProject.Services
 {
     public class BookingService : IBookingService
     {
-        private readonly AppDbContext _context;
+        private readonly IEventRepository _eventRepository;
+        private readonly IBookingRepository _bookingRepository;
 
         private static readonly SemaphoreSlim BookingSemaphore = new(1, 1);
 
-        public BookingService(AppDbContext context)
+        public BookingService(
+            IEventRepository eventRepository,
+            IBookingRepository bookingRepository)
         {
-            _context = context;
+            _eventRepository = eventRepository;
+            _bookingRepository = bookingRepository;
         }
 
         public async Task<BookingInfo> CreateBookingAsync(Guid eventId)
@@ -24,8 +26,7 @@ namespace WebApiProject.Services
 
             try
             {
-                var ev = await _context.Events
-                    .FirstOrDefaultAsync(e => e.Id == eventId)
+                var ev = await _eventRepository.GetByIdAsync(eventId)
                     ?? throw new NotFoundException(
                         $"Событие по ключу {eventId} не найдено.");
 
@@ -37,9 +38,9 @@ namespace WebApiProject.Services
 
                 var booking = new Booking(eventId);
 
-                _context.Bookings.Add(booking);
+                await _bookingRepository.AddAsync(booking);
 
-                await _context.SaveChangesAsync();
+                await _bookingRepository.SaveChangesAsync();
 
                 return ToBookingInfo(booking);
             }
@@ -51,9 +52,7 @@ namespace WebApiProject.Services
 
         public async Task<BookingInfo> GetBookingByIdAsync(Guid bookingId)
         {
-            var booking = await _context.Bookings
-                .AsNoTracking()
-                .FirstOrDefaultAsync(b => b.Id == bookingId)
+            var booking = await _bookingRepository.GetByIdAsync(bookingId)
                 ?? throw new NotFoundException(
                     $"Бронь по ключу {bookingId} не найдена.");
 
