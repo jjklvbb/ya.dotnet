@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using WebApiProject.DataAccess;
-using WebApiProject.DTOs;
+﻿using WebApiProject.DTOs;
 using WebApiProject.Entities;
 using WebApiProject.Exceptions;
 using WebApiProject.Interfaces;
@@ -9,69 +7,47 @@ namespace WebApiProject.Services
 {
     public class EventService : IEventService
     {
-        private readonly AppDbContext _context;
+        private readonly IEventRepository _eventRepository;
 
-        public EventService(AppDbContext context)
+        public EventService(IEventRepository eventRepository)
         {
-            _context = context;
+            _eventRepository = eventRepository;
         }
 
-        public async Task<PagedResult<Event>> GetEventsAsync(EventFilterParameters filter, int page = 1, int pageSize = 10)
+        public async Task<PagedResult<Event>> GetEventsAsync(
+            EventFilterParameters filter,
+            int page = 1,
+            int pageSize = 10)
         {
-            IQueryable<Event> query = _context.Events.AsNoTracking();
-
-            if (!string.IsNullOrWhiteSpace(filter.Title))
-            {
-                var title = filter.Title.ToLower();
-
-                query = query.Where(e => e.Title.ToLower().Contains(title));
-            }
-
-            if (filter.From.HasValue)
-            {
-                query = query.Where(e => e.StartAt >= filter.From.Value);
-            }
-
-            if (filter.To.HasValue)
-            {
-                query = query.Where(e => e.EndAt <= filter.To.Value);
-            }
-
-            int totalItems = await query.CountAsync();
-
-            var items = await query
-                .OrderByDescending(e => e.StartAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return new PagedResult<Event>(
-                items,
+            return await _eventRepository.GetEventsAsync(
+                filter.Title,
+                filter.From,
+                filter.To,
                 page,
-                items.Count,
-                totalItems);
+                pageSize);
         }
 
         public async Task<Event> GetEventByIdAsync(Guid id)
         {
-            return await _context.Events
-                .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.Id == id)
+            return await _eventRepository.GetByIdAsync(id)
                 ?? throw new NotFoundException(
                     $"Событие по ключу {id} не найдено.");
         }
 
         public async Task CreateEventAsync(Event newEvent)
         {
-            _context.Events.Add(newEvent);
-
-            await _context.SaveChangesAsync();
+            await _eventRepository.AddAsync(newEvent);
+            await _eventRepository.SaveChangesAsync();
         }
 
-        public async Task UpdateEventAsync(Guid id, string title, string? description, DateTime startAt, DateTime endAt)
+        public async Task UpdateEventAsync(
+            Guid id,
+            string title,
+            string? description,
+            DateTime startAt,
+            DateTime endAt)
         {
-            var existingEvent = await _context.Events
-                .FirstOrDefaultAsync(e => e.Id == id)
+            var existingEvent = await _eventRepository.GetByIdAsync(id)
                 ?? throw new NotFoundException(
                     $"Событие по ключу {id} не найдено.");
 
@@ -81,19 +57,18 @@ namespace WebApiProject.Services
                 startAt,
                 endAt);
 
-            await _context.SaveChangesAsync();
+            await _eventRepository.SaveChangesAsync();
         }
 
         public async Task DeleteEventAsync(Guid id)
         {
-            var existingEvent = await _context.Events
-                .FirstOrDefaultAsync(e => e.Id == id)
+            var existingEvent = await _eventRepository.GetByIdAsync(id)
                 ?? throw new NotFoundException(
                     $"Событие по ключу {id} не найдено.");
 
-            _context.Events.Remove(existingEvent);
+            _eventRepository.Remove(existingEvent);
 
-            await _context.SaveChangesAsync();
+            await _eventRepository.SaveChangesAsync();
         }
     }
 }
