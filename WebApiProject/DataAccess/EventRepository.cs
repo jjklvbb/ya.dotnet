@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using WebApiProject.DTOs;
+using EventApi.Application.DTOs;
 using EventApi.Domain.Entities;
-using WebApiProject.Interfaces;
+using EventApi.Application.Ports;
 
 namespace WebApiProject.DataAccess
 {

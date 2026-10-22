@@ -1,6 +1,6 @@
 ﻿using EventApi.Domain.Entities;
 
-namespace WebApiProject.DTOs
+namespace EventApi.Application.DTOs
 {
     public record BookingInfo(
         Guid Id,

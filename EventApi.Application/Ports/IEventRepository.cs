@@ -1,7 +1,7 @@
-﻿using WebApiProject.DTOs;
+﻿using EventApi.Application.DTOs;
 using EventApi.Domain.Entities;
 
-namespace WebApiProject.Interfaces
+namespace EventApi.Application.Ports
 {
     public interface IEventRepository
     {

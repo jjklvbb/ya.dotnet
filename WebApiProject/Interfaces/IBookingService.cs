@@ -1,4 +1,4 @@
-﻿using WebApiProject.DTOs;
+﻿using EventApi.Application.DTOs;
 
 namespace WebApiProject.Interfaces
 {

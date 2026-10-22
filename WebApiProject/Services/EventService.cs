@@ -1,7 +1,8 @@
 ﻿using WebApiProject.DTOs;
+using EventApi.Application.DTOs;
 using EventApi.Domain.Entities;
 using EventApi.Domain.Exceptions;
-using WebApiProject.Interfaces;
+using EventApi.Application.Ports;
 
 namespace WebApiProject.Services
 {

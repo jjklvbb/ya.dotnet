@@ -1,5 +1,5 @@
 ﻿using EventApi.Domain.Entities;
-using WebApiProject.Interfaces;
+using EventApi.Application.Ports;
 
 namespace WebApiProject.Services
 {

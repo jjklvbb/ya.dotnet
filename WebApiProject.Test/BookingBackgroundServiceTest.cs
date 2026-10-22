@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApiProject.DataAccess;
 using EventApi.Domain.Entities;
-using WebApiProject.Interfaces;
+using EventApi.Application.Ports;
 using WebApiProject.Services;
 
 namespace WebApiProject.Test

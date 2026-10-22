@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using WebApiProject.DTOs;
+using EventApi.Application.DTOs;
 using WebApiProject.Interfaces;
 using WebApiProject.Responses;
 

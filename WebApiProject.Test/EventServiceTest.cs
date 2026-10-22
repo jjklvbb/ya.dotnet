@@ -6,7 +6,7 @@ using WebApiProject.DataAccess;
 using WebApiProject.DTOs;
 using EventApi.Domain.Entities;
 using EventApi.Domain.Exceptions;
-using WebApiProject.Interfaces;
+using EventApi.Application.Ports;
 using WebApiProject.Services;
 
 public class EventServiceTest : IDisposable

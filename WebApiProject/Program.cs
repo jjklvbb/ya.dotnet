@@ -5,6 +5,7 @@ using WebApiProject.DataAccess;
 using WebApiProject.Interfaces;
 using WebApiProject.Middlewares;
 using WebApiProject.Services;
+using EventApi.Application.Ports;
 
 var builder = WebApplication.CreateBuilder(args);
 

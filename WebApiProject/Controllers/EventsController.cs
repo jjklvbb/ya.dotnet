@@ -3,6 +3,7 @@ using System.Net;
 using EventApi.Domain.Entities;
 using WebApiProject.Interfaces;
 using WebApiProject.DTOs;
+using EventApi.Application.DTOs;
 using WebApiProject.Responses;
 using System.ComponentModel.DataAnnotations;
 
