@@ -2,8 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using WebApiProject.DataAccess;
 using WebApiProject.DTOs;
-using WebApiProject.Entities;
-using WebApiProject.Exceptions;
+using EventApi.Domain.Entities;
+using EventApi.Domain.Exceptions;
 using WebApiProject.Interfaces;
 using WebApiProject.Services;
 

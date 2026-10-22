@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WebApiProject.Entities;
+using EventApi.Domain.Entities;
 
 namespace WebApiProject.DataAccess.Configurations;
 

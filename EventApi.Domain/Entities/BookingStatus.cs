@@ -1,4 +1,4 @@
-﻿namespace WebApiProject.Entities
+﻿namespace EventApi.Domain.Entities
 {
     public enum BookingStatus
     {

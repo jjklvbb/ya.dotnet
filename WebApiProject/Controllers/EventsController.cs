@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using WebApiProject.Entities;
+using EventApi.Domain.Entities;
 using WebApiProject.Interfaces;
 using WebApiProject.DTOs;
 using WebApiProject.Responses;
@@ -37,7 +37,7 @@ namespace WebApiProject.Controllers
                     .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
                     .ToArray();
 
-                throw new Exceptions.ValidationException(
+                throw new EventApi.Domain.Exceptions.ValidationException(
                     $"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
             }
 
@@ -80,7 +80,7 @@ namespace WebApiProject.Controllers
                     .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
                     .ToArray();
 
-                throw new Exceptions.ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
+                throw new ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
             }
 
             var ev = new Event(
@@ -118,7 +118,7 @@ namespace WebApiProject.Controllers
                     .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
                     .ToArray();
 
-                throw new Exceptions.ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
+                throw new ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
             }
 
             await _eventService.UpdateEventAsync(id, newEvent.Title, newEvent.Description, newEvent.StartAt, newEvent.EndAt);

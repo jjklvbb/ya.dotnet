@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApiProject.DataAccess;
-using WebApiProject.Entities;
+using EventApi.Domain.Entities;
 using WebApiProject.Interfaces;
 using WebApiProject.Services;
 

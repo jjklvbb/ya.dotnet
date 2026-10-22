@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using WebApiProject.Entities;
+using EventApi.Domain.Entities;
 
 namespace WebApiProject.DataAccess;
 

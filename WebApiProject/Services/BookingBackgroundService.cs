@@ -1,4 +1,4 @@
-﻿using WebApiProject.Entities;
+﻿using EventApi.Domain.Entities;
 using WebApiProject.Interfaces;
 
 namespace WebApiProject.Services

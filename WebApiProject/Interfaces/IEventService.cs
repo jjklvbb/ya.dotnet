@@ -1,5 +1,5 @@
 ﻿using WebApiProject.DTOs;
-using WebApiProject.Entities;
+using EventApi.Domain.Entities;
 
 public interface IEventService
 {

@@ -1,4 +1,4 @@
-﻿using WebApiProject.Exceptions;
+﻿using EventApi.Domain.Exceptions;
 using WebApiProject.Responses;
 
 namespace WebApiProject.Middlewares

@@ -1,4 +1,4 @@
-﻿namespace WebApiProject.Exceptions
+﻿namespace EventApi.Domain.Exceptions
 {
     public class ValidationException : Exception
     {
