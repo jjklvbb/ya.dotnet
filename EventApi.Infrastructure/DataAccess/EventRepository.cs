@@ -3,7 +3,7 @@ using EventApi.Application.DTOs;
 using EventApi.Domain.Entities;
 using EventApi.Application.Ports;
 
-namespace WebApiProject.DataAccess
+namespace EventApi.Infrastructure.DataAccess
 {
     public class EventRepository : IEventRepository
     {

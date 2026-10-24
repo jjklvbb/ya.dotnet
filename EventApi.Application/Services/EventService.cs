@@ -2,8 +2,9 @@
 using EventApi.Domain.Entities;
 using EventApi.Domain.Exceptions;
 using EventApi.Application.Ports;
+using EventApi.Application.Interfaces;
 
-namespace WebApiProject.Services
+namespace EventApi.Application.Services
 {
     public class EventService : IEventService
     {
@@ -36,10 +37,25 @@ namespace WebApiProject.Services
                     $"Событие по ключу {id} не найдено.");
         }
 
-        public async Task CreateEventAsync(Event newEvent)
+        public async Task<Event> CreateEventAsync(
+            string title,
+            string? description,
+            DateTime startAt,
+            DateTime endAt,
+            int totalSeats)
         {
+            var newEvent = new Event(
+                Guid.NewGuid(),
+                title,
+                description,
+                startAt,
+                endAt,
+                totalSeats);
+
             await _eventRepository.AddAsync(newEvent);
             await _eventRepository.SaveChangesAsync();
+
+            return newEvent;
         }
 
         public async Task UpdateEventAsync(

@@ -1,6 +1,6 @@
 ﻿using EventApi.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using WebApiProject.DataAccess;
+using EventApi.Infrastructure.DataAccess;
 using EventApi.Domain.Entities;
 
 namespace EventApi.IntegrationTests;

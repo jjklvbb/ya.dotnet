@@ -2,12 +2,13 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using WebApiProject.DataAccess;
+using EventApi.Infrastructure.DataAccess;
 using WebApiProject.DTOs;
 using EventApi.Domain.Entities;
 using EventApi.Domain.Exceptions;
 using EventApi.Application.Ports;
-using WebApiProject.Services;
+using EventApi.Application.Services;
+using EventApi.Application.Interfaces;
 
 public class EventServiceTest : IDisposable
 {
@@ -75,21 +76,15 @@ public class EventServiceTest : IDisposable
     [Fact]
     public async Task CreateEvent_ValidEvent_AddsToDatabase()
     {
-        // Arrange
-        var newId = Guid.NewGuid();
-
-        var newEvent = new Event(
-            newId,
+        // Arrange Act
+        var newEv = await _eventService.CreateEventAsync(
             "Новое событие",
             "Описание",
             DateTime.Now.AddDays(1),
             DateTime.Now.AddDays(2),
             10);
 
-        // Act
-        await _eventService.CreateEventAsync(newEvent);
-
-        var result = await _eventService.GetEventByIdAsync(newId);
+        var result = await _eventService.GetEventByIdAsync(newEv.Id);
 
         // Assert
         Assert.Equal("Новое событие", result.Title);

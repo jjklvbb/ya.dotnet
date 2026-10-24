@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
-using WebApiProject.DataAccess;
+using EventApi.Infrastructure.DataAccess;
 using EventApi.Application.Interfaces;
 using WebApiProject.Middlewares;
-using WebApiProject.Services;
 using EventApi.Application.Services;
-using EventApi.Application.Ports;
+using EventApi.Infrastructure;
+using WebApiProject.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,14 +41,16 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
-builder.Services.AddScoped<IEventRepository, EventRepository>();
-builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+
+builder.Services.AddInfrastructure(
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException(
+        "Не настроено подключение к базе данных"));
+
+builder.Services.AddScoped<IBookingProcessingService, BookingProcessingService>();
 
 builder.Services.AddHostedService<BookingBackgroundService>();
 

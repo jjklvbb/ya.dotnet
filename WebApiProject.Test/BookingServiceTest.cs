@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using WebApiProject.DataAccess;
+using EventApi.Infrastructure.DataAccess;
 using EventApi.Application.DTOs;
 using EventApi.Domain.Entities;
 using EventApi.Domain.Exceptions;

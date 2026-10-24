@@ -1,6 +1,8 @@
 ﻿using EventApi.Application.DTOs;
 using EventApi.Domain.Entities;
 
+namespace EventApi.Application.Interfaces;
+
 public interface IEventService
 {
     Task<PagedResult<Event>> GetEventsAsync(
@@ -12,7 +14,12 @@ public interface IEventService
 
     Task<Event> GetEventByIdAsync(Guid id);
 
-    Task CreateEventAsync(Event newEvent);
+    Task<Event> CreateEventAsync(
+        string title,
+        string? description,
+        DateTime startAt,
+        DateTime endAt,
+        int totalSeats);
 
     Task UpdateEventAsync(
         Guid id,
