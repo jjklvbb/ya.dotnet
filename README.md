@@ -51,8 +51,8 @@ RESTful Web API для управления событиями и брониро
 ## Запуск проекта
 
 1. Клонировать репозиторий: `git clone https://github.com/jjklvbb/ya.dotnet.git`
-2. Перейти в папку `../ya.dotnet/WebApiProject`
-3. Для запуска требуется PostgreSQL.
+2. Перейти в корневую папку: `cd ya.dotnet`
+3. Запустить PostgreSQL через Docker Compose.
 
 Пример строки подключения в `appsettings.json`:
 
@@ -64,7 +64,13 @@ RESTful Web API для управления событиями и брониро
 
 Запустить PostgreSQL можно через предоставленный docker compose-файл:
 
-`docker compose up -d`
+`docker compose -f WebApiProject/docker-compose.yml up -d`
+
+4. Собрать проект: `dotnet build ya.dotnet.slnx`
+5. Запустить тесты: `dotnet test ya.dotnet.slnx`
+6. Запустить приложение: `dotnet run --project WebApiProject`
+7. Приложение будет доступно следующему адресу: `http://localhost:5168/`
+8. Открыть Swagger по адресу: `http://localhost:5168/swagger/`
 
 ### Миграции
 
@@ -89,14 +95,6 @@ dotnet ef migrations remove --project EventApi.Infrastructure --startup-project 
 ```
 
 При запуске приложения неприменённые миграции автоматически применяются через `db.Database.Migrate()`.
-
-4. Собрать проект: `dotnet build`
-5. Запустить тесты: `dotnet test`
-6. Запустить приложение: `dotnet run`
-7. Приложение будет доступно следующему адресу: `http://localhost:5168/`
-8. Открыть Swagger по адресу: `http://localhost:5168/swagger/`
-
----
 
 # API событий
 
