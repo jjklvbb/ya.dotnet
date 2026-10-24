@@ -23,7 +23,30 @@ RESTful Web API для управления событиями и брониро
 - управление схемой PostgreSQL через EF Core Migrations;
 - интеграционные тесты репозиториев на реальном PostgreSQL через Testcontainers.
 
----
+## Архитектура проекта
+
+Проект разделён на четыре слоя по принципам Clean Architecture.
+
+- EventApi.Domain — доменные сущности, перечисления, исключения
+  и бизнес-правила.
+- EventApi.Application — сценарии использования, сервисы,
+  интерфейсы репозиториев и DTO.
+- EventApi.Infrastructure — EF Core, PostgreSQL, репозитории,
+  конфигурации сущностей и миграции.
+- WebApiProject (Presentation) — HTTP-контроллеры, модели
+  запросов, middleware, Swagger и регистрация зависимостей.
+
+Направление зависимостей:
+
+- Application → Domain
+- Infrastructure → Application, Domain
+- Presentation → Application, Infrastructure
+
+Бизнес-логика не зависит от ASP.NET Core или EF Core.
+
+Фоновая обработка бронирований разделена:
+- BookingBackgroundService запускает обработку;
+- BookingProcessingService выполняет бизнес-операции.
 
 ## Запуск проекта
 
@@ -50,19 +73,19 @@ RESTful Web API для управления событиями и брониро
 Создать новую миграцию:
 
 ```bash
-dotnet ef migrations add MigrationName
+dotnet ef migrations add MigrationName --project EventApi.Infrastructure --startup-project WebApiProject
 ```
 
 Применить миграции вручную:
 
 ```bash
-dotnet ef database update
+dotnet ef database update --project EventApi.Infrastructure --startup-project WebApiProject
 ```
 
 Удалить последнюю миграцию, если она ещё не была применена:
 
 ```bash
-dotnet ef migrations remove
+dotnet ef migrations remove --project EventApi.Infrastructure --startup-project WebApiProject
 ```
 
 При запуске приложения неприменённые миграции автоматически применяются через `db.Database.Migrate()`.
@@ -113,8 +136,8 @@ POST /events
 {
   "title": "Концерт",
   "description": "Тестовое событие",
-  "startAt": "2026-10-10T18:00:00",
-  "endAt": "2026-10-10T21:00:00",
+  "startAt": "2026-11-10T18:00:00Z",
+  "endAt": "2026-11-10T21:00:00Z",
   "totalSeats": 3
 }
 ```
