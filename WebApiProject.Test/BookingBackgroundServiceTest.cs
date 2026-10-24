@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EventApi.Application.Interfaces;
+using EventApi.Application.Ports;
+using EventApi.Application.Services;
+using EventApi.Domain.Entities;
+using EventApi.Infrastructure.DataAccess;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
-using WebApiProject.DataAccess;
-using WebApiProject.Entities;
-using WebApiProject.Interfaces;
 using WebApiProject.Services;
 
 namespace WebApiProject.Test
@@ -23,6 +25,7 @@ namespace WebApiProject.Test
 
             services.AddScoped<IEventRepository, EventRepository>();
             services.AddScoped<IBookingRepository, BookingRepository>();
+            services.AddScoped<IBookingProcessingService, BookingProcessingService>();
 
             using var serviceProvider = services.BuildServiceProvider();
 
@@ -92,6 +95,7 @@ namespace WebApiProject.Test
 
             services.AddScoped<IEventRepository, EventRepository>();
             services.AddScoped<IBookingRepository, BookingRepository>();
+            services.AddScoped<IBookingProcessingService, BookingProcessingService>();
 
             using var serviceProvider = services.BuildServiceProvider();
 

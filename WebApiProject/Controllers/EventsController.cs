@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using WebApiProject.Entities;
-using WebApiProject.Interfaces;
+using EventApi.Domain.Entities;
+using EventApi.Application.Interfaces;
 using WebApiProject.DTOs;
+using EventApi.Application.DTOs;
 using WebApiProject.Responses;
 using System.ComponentModel.DataAnnotations;
+using DomainValidationException =
+    EventApi.Domain.Exceptions.ValidationException;
 
 namespace WebApiProject.Controllers
 {
@@ -37,13 +40,21 @@ namespace WebApiProject.Controllers
                     .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
                     .ToArray();
 
-                throw new Exceptions.ValidationException(
-                    $"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
+                throw new DomainValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
+            }
+
+            if ((filter.From.HasValue &&
+                 filter.From.Value.Kind != DateTimeKind.Utc) ||
+                (filter.To.HasValue &&
+                 filter.To.Value.Kind != DateTimeKind.Utc))
+            {
+                throw new DomainValidationException(
+                    "Параметры from и to должны быть указаны в UTC (с суффиксом Z).");
             }
 
             var result = new ApiResult<PagedResult<Event>>
             {
-                Data = await _eventService.GetEventsAsync(filter, page, pageSize),
+                Data = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, page, pageSize),
                 Success = true,
                 StatusCode = HttpStatusCode.OK,
                 Message = "Получение списка всех событий"
@@ -59,12 +70,12 @@ namespace WebApiProject.Controllers
             Event ev = await _eventService.GetEventByIdAsync(id);
 
             var result = new ApiResult<Event>
-                {
-                    Data = ev,
-                    Success = true,
-                    StatusCode = HttpStatusCode.OK,
-                    Message = "Получение события по ID"
-                };
+            {
+                Data = ev,
+                Success = true,
+                StatusCode = HttpStatusCode.OK,
+                Message = "Получение события по ID"
+            };
 
             return Ok(result);
         }
@@ -80,18 +91,21 @@ namespace WebApiProject.Controllers
                     .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
                     .ToArray();
 
-                throw new Exceptions.ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
+                throw new DomainValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
             }
 
-            var ev = new Event(
-                Guid.NewGuid(),
+            if (newEvent.StartAt.Kind != DateTimeKind.Utc || newEvent.EndAt.Kind != DateTimeKind.Utc)
+            {
+                throw new DomainValidationException(
+                    "Даты StartAt и EndAt должны быть указаны в UTC (с суффиксом Z).");
+            }
+
+            var ev = await _eventService.CreateEventAsync(
                 newEvent.Title,
                 newEvent.Description,
                 newEvent.StartAt,
                 newEvent.EndAt,
                 newEvent.TotalSeats!.Value);
-
-            await _eventService.CreateEventAsync(ev);
 
             var result = new ApiResult<Event>
             {
@@ -118,7 +132,13 @@ namespace WebApiProject.Controllers
                     .SelectMany(kvp => kvp.Value!.Errors.Select(err => err.ErrorMessage))
                     .ToArray();
 
-                throw new Exceptions.ValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
+                throw new DomainValidationException($"Модель не валидна. Подробности: {string.Join("; ", errorMessages)}");
+            }
+
+            if (newEvent.StartAt.Kind != DateTimeKind.Utc || newEvent.EndAt.Kind != DateTimeKind.Utc)
+            {
+                throw new DomainValidationException(
+                    "Даты StartAt и EndAt должны быть указаны в UTC (с суффиксом Z).");
             }
 
             await _eventService.UpdateEventAsync(id, newEvent.Title, newEvent.Description, newEvent.StartAt, newEvent.EndAt);
@@ -131,7 +151,7 @@ namespace WebApiProject.Controllers
             };
 
             return Ok(result);
-            
+
         }
 
         //DELETE /events/{id} — удалить событие; если не найдено — вернуть корректный HTTP-ответ (например, 404).

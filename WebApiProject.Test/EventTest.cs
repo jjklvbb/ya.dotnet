@@ -1,4 +1,4 @@
-﻿using WebApiProject.Entities;
+﻿using EventApi.Domain.Entities;
 
 namespace WebApiProject.Test
 {
@@ -33,7 +33,7 @@ namespace WebApiProject.Test
         [Fact]
         public void Constructor_TotalSeatsLessThanOrEqualToZero_ThrowsValidationException()
         {
-            Assert.Throws<WebApiProject.Exceptions.ValidationException>(() =>
+            Assert.Throws<EventApi.Domain.Exceptions.ValidationException>(() =>
                 new Event(
                     Guid.NewGuid(),
                     "Событие",

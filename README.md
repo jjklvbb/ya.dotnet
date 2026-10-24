@@ -23,13 +23,36 @@ RESTful Web API для управления событиями и брониро
 - управление схемой PostgreSQL через EF Core Migrations;
 - интеграционные тесты репозиториев на реальном PostgreSQL через Testcontainers.
 
----
+## Архитектура проекта
+
+Проект разделён на четыре слоя по принципам Clean Architecture.
+
+- EventApi.Domain — доменные сущности, перечисления, исключения
+  и бизнес-правила.
+- EventApi.Application — сценарии использования, сервисы,
+  интерфейсы репозиториев и DTO.
+- EventApi.Infrastructure — EF Core, PostgreSQL, репозитории,
+  конфигурации сущностей и миграции.
+- WebApiProject (Presentation) — HTTP-контроллеры, модели
+  запросов, middleware, Swagger и регистрация зависимостей.
+
+Направление зависимостей:
+
+- Application → Domain
+- Infrastructure → Application, Domain
+- Presentation → Application, Infrastructure
+
+Бизнес-логика не зависит от ASP.NET Core или EF Core.
+
+Фоновая обработка бронирований разделена:
+- BookingBackgroundService запускает обработку;
+- BookingProcessingService выполняет бизнес-операции.
 
 ## Запуск проекта
 
 1. Клонировать репозиторий: `git clone https://github.com/jjklvbb/ya.dotnet.git`
-2. Перейти в папку `../ya.dotnet/WebApiProject`
-3. Для запуска требуется PostgreSQL.
+2. Перейти в корневую папку: `cd ya.dotnet`
+3. Запустить PostgreSQL через Docker Compose.
 
 Пример строки подключения в `appsettings.json`:
 
@@ -41,7 +64,13 @@ RESTful Web API для управления событиями и брониро
 
 Запустить PostgreSQL можно через предоставленный docker compose-файл:
 
-`docker compose up -d`
+`docker compose -f WebApiProject/docker-compose.yml up -d`
+
+4. Собрать проект: `dotnet build ya.dotnet.slnx`
+5. Запустить тесты: `dotnet test ya.dotnet.slnx`
+6. Запустить приложение: `dotnet run --project WebApiProject`
+7. Приложение будет доступно следующему адресу: `http://localhost:5168/`
+8. Открыть Swagger по адресу: `http://localhost:5168/swagger/`
 
 ### Миграции
 
@@ -50,30 +79,22 @@ RESTful Web API для управления событиями и брониро
 Создать новую миграцию:
 
 ```bash
-dotnet ef migrations add MigrationName
+dotnet ef migrations add MigrationName --project EventApi.Infrastructure --startup-project WebApiProject
 ```
 
 Применить миграции вручную:
 
 ```bash
-dotnet ef database update
+dotnet ef database update --project EventApi.Infrastructure --startup-project WebApiProject
 ```
 
 Удалить последнюю миграцию, если она ещё не была применена:
 
 ```bash
-dotnet ef migrations remove
+dotnet ef migrations remove --project EventApi.Infrastructure --startup-project WebApiProject
 ```
 
 При запуске приложения неприменённые миграции автоматически применяются через `db.Database.Migrate()`.
-
-4. Собрать проект: `dotnet build`
-5. Запустить тесты: `dotnet test`
-6. Запустить приложение: `dotnet run`
-7. Приложение будет доступно следующему адресу: `http://localhost:5168/`
-8. Открыть Swagger по адресу: `http://localhost:5168/swagger/`
-
----
 
 # API событий
 
@@ -113,8 +134,8 @@ POST /events
 {
   "title": "Концерт",
   "description": "Тестовое событие",
-  "startAt": "2026-10-10T18:00:00",
-  "endAt": "2026-10-10T21:00:00",
+  "startAt": "2026-11-10T18:00:00Z",
+  "endAt": "2026-11-10T21:00:00Z",
   "totalSeats": 3
 }
 ```
@@ -144,7 +165,7 @@ POST /events
 ```http
 GET /events
 
-GET /events?title=концерт&from=2026-10-01&to=2026-12-31
+GET /events?title=концерт&from=2026-10-01T00:00:00Z&to=2026-12-31T23:59:59Z
 
 GET /events?page=2&pageSize=5
 

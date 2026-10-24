@@ -1,5 +1,5 @@
-﻿using WebApiProject.Entities;
-using WebApiProject.Interfaces;
+using EventApi.Application.Ports;
+using EventApi.Application.Interfaces;
 
 namespace WebApiProject.Services
 {
@@ -67,58 +67,14 @@ namespace WebApiProject.Services
         {
             try
             {
-                await Task.Delay(
-                    ProcessingDelay,
-                    stoppingToken);
+                await Task.Delay(ProcessingDelay, stoppingToken);
 
                 using var scope = _scopeFactory.CreateScope();
 
-                var bookingRepository = scope.ServiceProvider
-                    .GetRequiredService<IBookingRepository>();
+                var processor = scope.ServiceProvider
+                    .GetRequiredService<IBookingProcessingService>();
 
-                var eventRepository = scope.ServiceProvider
-                    .GetRequiredService<IEventRepository>();
-
-                var booking = await bookingRepository.GetByIdAsync(
-                    bookingId,
-                    stoppingToken);
-
-                if (booking == null)
-                {
-                    _logger.LogWarning(
-                        "Booking {BookingId} no longer exists",
-                        bookingId);
-
-                    return;
-                }
-
-                var ev = await eventRepository.GetByIdAsync(
-                    booking.EventId,
-                    stoppingToken);
-
-                if (ev == null)
-                {
-                    booking.Reject();
-
-                    await bookingRepository.SaveChangesAsync(
-                        stoppingToken);
-
-                    _logger.LogWarning(
-                        "Booking {BookingId} rejected because event {EventId} no longer exists",
-                        booking.Id,
-                        booking.EventId);
-
-                    return;
-                }
-
-                booking.Confirm();
-
-                await bookingRepository.SaveChangesAsync(
-                    stoppingToken);
-
-                _logger.LogInformation(
-                    "Booking {BookingId} confirmed",
-                    booking.Id);
+                await processor.ProcessAsync(bookingId, stoppingToken);
             }
             catch (OperationCanceledException)
                 when (stoppingToken.IsCancellationRequested)
@@ -134,46 +90,23 @@ namespace WebApiProject.Services
                     "Error while processing booking {BookingId}",
                     bookingId);
 
-                await RejectBookingAsync(
-                    bookingId,
-                    stoppingToken);
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+
+                    var processor = scope.ServiceProvider
+                        .GetRequiredService<IBookingProcessingService>();
+
+                    await processor.RejectAsync(bookingId, stoppingToken);
+                }
+                catch (Exception rejectionException)
+                {
+                    _logger.LogError(
+                        rejectionException,
+                        "Unable to reject booking {BookingId}",
+                        bookingId);
+                }
             }
-        }
-
-        private async Task RejectBookingAsync(
-            Guid bookingId,
-            CancellationToken stoppingToken)
-        {
-            using var scope = _scopeFactory.CreateScope();
-
-            var bookingRepository = scope.ServiceProvider
-                .GetRequiredService<IBookingRepository>();
-
-            var eventRepository = scope.ServiceProvider
-                .GetRequiredService<IEventRepository>();
-
-            var booking = await bookingRepository.GetByIdAsync(
-                bookingId,
-                stoppingToken);
-
-            if (booking == null)
-            {
-                return;
-            }
-
-            booking.Reject();
-
-            var ev = await eventRepository.GetByIdAsync(
-                booking.EventId,
-                stoppingToken);
-
-            if (ev != null)
-            {
-                ev.ReleaseSeats();
-            }
-
-            await bookingRepository.SaveChangesAsync(
-                stoppingToken);
         }
     }
 }

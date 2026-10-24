@@ -2,12 +2,13 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using WebApiProject.DataAccess;
+using EventApi.Infrastructure.DataAccess;
 using WebApiProject.DTOs;
-using WebApiProject.Entities;
-using WebApiProject.Exceptions;
-using WebApiProject.Interfaces;
-using WebApiProject.Services;
+using EventApi.Domain.Entities;
+using EventApi.Domain.Exceptions;
+using EventApi.Application.Ports;
+using EventApi.Application.Services;
+using EventApi.Application.Interfaces;
 
 public class EventServiceTest : IDisposable
 {
@@ -75,21 +76,15 @@ public class EventServiceTest : IDisposable
     [Fact]
     public async Task CreateEvent_ValidEvent_AddsToDatabase()
     {
-        // Arrange
-        var newId = Guid.NewGuid();
-
-        var newEvent = new Event(
-            newId,
+        // Arrange Act
+        var newEv = await _eventService.CreateEventAsync(
             "Новое событие",
             "Описание",
             DateTime.Now.AddDays(1),
             DateTime.Now.AddDays(2),
             10);
 
-        // Act
-        await _eventService.CreateEventAsync(newEvent);
-
-        var result = await _eventService.GetEventByIdAsync(newId);
+        var result = await _eventService.GetEventByIdAsync(newEv.Id);
 
         // Assert
         Assert.Equal("Новое событие", result.Title);
@@ -104,7 +99,7 @@ public class EventServiceTest : IDisposable
         var filter = new EventFilterParameters();
 
         // Act
-        var result = await _eventService.GetEventsAsync(filter, 1, 10);
+        var result = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, 1, 10);
 
         // Assert
         Assert.Equal(3, result.TotalItems);
@@ -170,7 +165,7 @@ public class EventServiceTest : IDisposable
         };
 
         // Act
-        var result = await _eventService.GetEventsAsync(filter, 1, 10);
+        var result = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, 1, 10);
 
         // Assert
         Assert.Single(result.Items);
@@ -190,7 +185,7 @@ public class EventServiceTest : IDisposable
         };
 
         // Act
-        var result = await _eventService.GetEventsAsync(filter, 1, 10);
+        var result = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, 1, 10);
 
         // Assert
         Assert.Equal(2, result.TotalItems);
@@ -214,10 +209,7 @@ public class EventServiceTest : IDisposable
         const int pageSize = 2;
 
         // Act
-        var result = await _eventService.GetEventsAsync(
-            filter,
-            page,
-            pageSize);
+        var result = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, page, pageSize);
 
         // Assert
         Assert.Equal(2, result.Items.Count());
@@ -238,7 +230,7 @@ public class EventServiceTest : IDisposable
         };
 
         // Act
-        var result = await _eventService.GetEventsAsync(filter, 1, 10);
+        var result = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, 1, 10);
 
         // Assert
         Assert.Single(result.Items);
