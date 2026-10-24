@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WebApiProject\WebApiProject.csproj" />
+    <ProjectReference Include="..\EventApi.Application\EventApi.Application.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,4 @@
-﻿using WebApiProject.DTOs;
-using EventApi.Application.DTOs;
+﻿using EventApi.Application.DTOs;
 using EventApi.Domain.Entities;
 using EventApi.Domain.Exceptions;
 using EventApi.Application.Ports;
@@ -16,14 +15,16 @@ namespace WebApiProject.Services
         }
 
         public async Task<PagedResult<Event>> GetEventsAsync(
-            EventFilterParameters filter,
+            string? title,
+            DateTime? from,
+            DateTime? to,
             int page = 1,
             int pageSize = 10)
         {
             return await _eventRepository.GetEventsAsync(
-                filter.Title,
-                filter.From,
-                filter.To,
+                title,
+                from,
+                to,
                 page,
                 pageSize);
         }

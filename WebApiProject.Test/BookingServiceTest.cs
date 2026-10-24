@@ -4,8 +4,9 @@ using WebApiProject.DataAccess;
 using EventApi.Application.DTOs;
 using EventApi.Domain.Entities;
 using EventApi.Domain.Exceptions;
-using WebApiProject.Interfaces;
-using WebApiProject.Services;
+using EventApi.Application.Interfaces;
+using EventApi.Application.Services;
+
 using EventApi.Application.Ports;
 
 namespace WebApiProject.Test

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using EventApi.Application.DTOs;
-using WebApiProject.Interfaces;
+using EventApi.Application.Interfaces;
 using WebApiProject.Responses;
 
 namespace WebApiProject.Controllers

@@ -2,9 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using WebApiProject.DataAccess;
-using WebApiProject.Interfaces;
+using EventApi.Application.Interfaces;
 using WebApiProject.Middlewares;
 using WebApiProject.Services;
+using EventApi.Application.Services;
 using EventApi.Application.Ports;
 
 var builder = WebApplication.CreateBuilder(args);

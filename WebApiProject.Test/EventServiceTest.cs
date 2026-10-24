@@ -104,7 +104,7 @@ public class EventServiceTest : IDisposable
         var filter = new EventFilterParameters();
 
         // Act
-        var result = await _eventService.GetEventsAsync(filter, 1, 10);
+        var result = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, 1, 10);
 
         // Assert
         Assert.Equal(3, result.TotalItems);
@@ -170,7 +170,7 @@ public class EventServiceTest : IDisposable
         };
 
         // Act
-        var result = await _eventService.GetEventsAsync(filter, 1, 10);
+        var result = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, 1, 10);
 
         // Assert
         Assert.Single(result.Items);
@@ -190,7 +190,7 @@ public class EventServiceTest : IDisposable
         };
 
         // Act
-        var result = await _eventService.GetEventsAsync(filter, 1, 10);
+        var result = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, 1, 10);
 
         // Assert
         Assert.Equal(2, result.TotalItems);
@@ -214,10 +214,7 @@ public class EventServiceTest : IDisposable
         const int pageSize = 2;
 
         // Act
-        var result = await _eventService.GetEventsAsync(
-            filter,
-            page,
-            pageSize);
+        var result = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, page, pageSize);
 
         // Assert
         Assert.Equal(2, result.Items.Count());
@@ -238,7 +235,7 @@ public class EventServiceTest : IDisposable
         };
 
         // Act
-        var result = await _eventService.GetEventsAsync(filter, 1, 10);
+        var result = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, 1, 10);
 
         // Assert
         Assert.Single(result.Items);

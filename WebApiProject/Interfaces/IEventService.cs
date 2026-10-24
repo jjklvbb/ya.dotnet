@@ -1,11 +1,12 @@
-﻿using WebApiProject.DTOs;
-using EventApi.Application.DTOs;
+﻿using EventApi.Application.DTOs;
 using EventApi.Domain.Entities;
 
 public interface IEventService
 {
     Task<PagedResult<Event>> GetEventsAsync(
-        EventFilterParameters filter,
+        string? title,
+        DateTime? from,
+        DateTime? to,
         int page,
         int pageSize);
 

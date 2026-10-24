@@ -2,9 +2,9 @@
 using EventApi.Domain.Entities;
 using EventApi.Domain.Exceptions;
 using EventApi.Application.Ports;
-using WebApiProject.Interfaces;
+using EventApi.Application.Interfaces;
 
-namespace WebApiProject.Services
+namespace EventApi.Application.Services
 {
     public class BookingService : IBookingService
     {

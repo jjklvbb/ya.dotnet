@@ -1,6 +1,6 @@
 ﻿using EventApi.Application.DTOs;
 
-namespace WebApiProject.Interfaces
+namespace EventApi.Application.Interfaces
 {
     public interface IBookingService
     {

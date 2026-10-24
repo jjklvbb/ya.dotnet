@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using EventApi.Domain.Entities;
-using WebApiProject.Interfaces;
+using EventApi.Application.Interfaces;
 using WebApiProject.DTOs;
 using EventApi.Application.DTOs;
 using WebApiProject.Responses;
@@ -44,7 +44,7 @@ namespace WebApiProject.Controllers
 
             var result = new ApiResult<PagedResult<Event>>
             {
-                Data = await _eventService.GetEventsAsync(filter, page, pageSize),
+                Data = await _eventService.GetEventsAsync(filter.Title, filter.From, filter.To, page, pageSize),
                 Success = true,
                 StatusCode = HttpStatusCode.OK,
                 Message = "Получение списка всех событий"
