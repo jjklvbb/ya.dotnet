@@ -70,12 +70,12 @@ namespace WebApiProject.Controllers
             Event ev = await _eventService.GetEventByIdAsync(id);
 
             var result = new ApiResult<Event>
-                {
-                    Data = ev,
-                    Success = true,
-                    StatusCode = HttpStatusCode.OK,
-                    Message = "Получение события по ID"
-                };
+            {
+                Data = ev,
+                Success = true,
+                StatusCode = HttpStatusCode.OK,
+                Message = "Получение события по ID"
+            };
 
             return Ok(result);
         }
@@ -151,7 +151,7 @@ namespace WebApiProject.Controllers
             };
 
             return Ok(result);
-            
+
         }
 
         //DELETE /events/{id} — удалить событие; если не найдено — вернуть корректный HTTP-ответ (например, 404).

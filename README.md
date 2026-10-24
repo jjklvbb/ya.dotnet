@@ -165,7 +165,7 @@ POST /events
 ```http
 GET /events
 
-GET /events?title=концерт&from=2026-10-01&to=2026-12-31
+GET /events?title=концерт&from=2026-10-01T00:00:00Z&to=2026-12-31T23:59:59Z
 
 GET /events?page=2&pageSize=5
 

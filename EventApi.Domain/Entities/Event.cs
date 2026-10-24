@@ -66,10 +66,10 @@ namespace EventApi.Domain.Entities
         public void Update(string title, string? description, DateTime startAt, DateTime endAt)
         {
             if (string.IsNullOrWhiteSpace(title))
-                throw new ArgumentException("Название не может быть пустым",  nameof(title));
+                throw new ArgumentException("Название не может быть пустым", nameof(title));
 
             if (startAt >= endAt)
-                throw new ArgumentException("Дата начала должна быть строго раньше даты окончания",  nameof(startAt));
+                throw new ArgumentException("Дата начала должна быть строго раньше даты окончания", nameof(startAt));
 
             Title = title;
             Description = description;
