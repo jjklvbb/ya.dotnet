@@ -1,4 +1,7 @@
 <Solution>
+  <Project Path="EventApi.Application/EventApi.Application.csproj" />
+  <Project Path="EventApi.Domain/EventApi.Domain.csproj" />
+  <Project Path="EventApi.Infrastructure/EventApi.Infrastructure.csproj" />
   <Project Path="EventApi.IntegrationTests/EventApi.IntegrationTests.csproj" />
   <Project Path="WebApiProject.Test/WebApiProject.Test.csproj" />
   <Project Path="WebApiProject/WebApiProject.csproj" />

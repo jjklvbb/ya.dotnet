@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
-using WebApiProject.DataAccess;
+using EventApi.Infrastructure.DataAccess;
 
 namespace EventApi.IntegrationTests.Infrastructure;
 

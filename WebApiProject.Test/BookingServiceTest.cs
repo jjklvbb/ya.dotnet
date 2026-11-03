@@ -1,11 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using WebApiProject.DataAccess;
-using WebApiProject.DTOs;
-using WebApiProject.Entities;
-using WebApiProject.Exceptions;
-using WebApiProject.Interfaces;
-using WebApiProject.Services;
+using EventApi.Infrastructure.DataAccess;
+using EventApi.Application.DTOs;
+using EventApi.Domain.Entities;
+using EventApi.Domain.Exceptions;
+using EventApi.Application.Interfaces;
+using EventApi.Application.Services;
+
+using EventApi.Application.Ports;
 
 namespace WebApiProject.Test
 {
