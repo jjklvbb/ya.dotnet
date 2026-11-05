@@ -1,4 +1,5 @@
 ﻿using EventApi.Domain.Entities;
+using EventApi.Domain.Exceptions;
 
 namespace WebApiProject.Test
 {
@@ -47,6 +48,42 @@ namespace WebApiProject.Test
             // Assert
             Assert.Equal(BookingStatus.Rejected, booking.Status);
             Assert.NotNull(booking.ProcessedAt);
+        }
+
+        [Fact]
+        public void Cancel_ShouldChangeStatusToCancelled()
+        {
+            // Arrange
+            var booking = new Booking(Guid.NewGuid());
+
+            // Act
+            booking.Cancel();
+
+            // Assert
+            Assert.Equal(BookingStatus.Cancelled, booking.Status);
+            Assert.NotNull(booking.ProcessedAt);
+        }
+
+        [Fact]
+        public void Cancel_ShouldThrow_WhenAlreadyCancelled()
+        {
+            // Arrange
+            var booking = new Booking(Guid.NewGuid());
+            booking.Cancel();
+
+            // Act & Assert
+            Assert.Throws<ValidationException>(() => booking.Cancel());
+        }
+
+        [Fact]
+        public void Confirm_ShouldThrow_WhenBookingCancelled()
+        {
+            // Arrange
+            var booking = new Booking(Guid.NewGuid());
+            booking.Cancel();
+
+            // Act & Assert
+            Assert.Throws<ValidationException>(() => booking.Confirm());
         }
     }
 }

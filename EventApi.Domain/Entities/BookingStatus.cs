@@ -1,9 +1,9 @@
-﻿namespace EventApi.Domain.Entities
+﻿namespace EventApi.Domain.Entities;
+
+public enum BookingStatus
 {
-    public enum BookingStatus
-    {
-        Pending,
-        Confirmed,
-        Rejected
-    }
+    Pending,
+    Confirmed,
+    Rejected,
+    Cancelled
 }
