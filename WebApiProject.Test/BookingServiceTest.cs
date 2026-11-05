@@ -15,6 +15,7 @@ namespace WebApiProject.Test
     {
         private readonly ServiceProvider _serviceProvider;
         private readonly Guid _eventId;
+        private readonly Guid _userId = Guid.NewGuid();
 
         public BookingServiceTest()
         {
@@ -90,7 +91,7 @@ namespace WebApiProject.Test
             var service = scope.ServiceProvider
                 .GetRequiredService<IBookingService>();
 
-            return await service.CreateBookingAsync(eventId);
+            return await service.CreateBookingAsync(eventId, _userId);
         }
 
         private async Task<BookingInfo> GetBookingAsync(Guid bookingId)
@@ -294,7 +295,7 @@ namespace WebApiProject.Test
 
                     try
                     {
-                        await service.CreateBookingAsync(ev.Id);
+                        await service.CreateBookingAsync(ev.Id, _userId);
                         return true;
                     }
                     catch (NoAvailableSeatsException)
@@ -329,7 +330,7 @@ namespace WebApiProject.Test
                     var service = scope.ServiceProvider
                         .GetRequiredService<IBookingService>();
 
-                    return await service.CreateBookingAsync(ev.Id);
+                    return await service.CreateBookingAsync(ev.Id, _userId);
                 }))
                 .ToArray();
 
@@ -386,6 +387,113 @@ namespace WebApiProject.Test
 
             Assert.Equal(0, updatedEvent.AvailableSeats);
         }
+
+        [Fact]
+        public async Task CreateBooking_WhenUserHasTenActiveBookings_Throws()
+        {
+            var ev = await CreateTestEventAsync(11);
+
+            for (var i = 0; i < 10; i++)
+            {
+                await CreateBookingAsync(ev.Id);
+            }
+
+            await Assert.ThrowsAsync<BookingLimitExceededException>(
+                () => CreateBookingAsync(ev.Id));
+
+            var updatedEvent = await GetEventAsync(ev.Id);
+
+            Assert.Equal(1, updatedEvent.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task CreateBooking_WhenEventAlreadyStarted_Throws()
+        {
+            var eventId = Guid.NewGuid();
+
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider
+                    .GetRequiredService<AppDbContext>();
+
+                context.Events.Add(new Event(
+                    eventId,
+                    "Past event",
+                    null,
+                    DateTime.UtcNow.AddHours(-2),
+                    DateTime.UtcNow.AddHours(-1),
+                    10));
+
+                await context.SaveChangesAsync();
+            }
+
+            await Assert.ThrowsAsync<ValidationException>(
+                () => CreateBookingAsync(eventId));
+        }
+
+        [Fact]
+        public async Task CancelBooking_ByOwner_ReleasesSeat()
+        {
+            var ev = await CreateTestEventAsync(1);
+            var booking = await CreateBookingAsync(ev.Id);
+
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var service = scope.ServiceProvider
+                    .GetRequiredService<IBookingService>();
+
+                await service.CancelBookingAsync(
+                    booking.Id, _userId, false);
+            }
+
+            var updatedBooking = await GetBookingAsync(booking.Id);
+            var updatedEvent = await GetEventAsync(ev.Id);
+
+            Assert.Equal(BookingStatus.Cancelled, updatedBooking.Status);
+            Assert.Equal(1, updatedEvent.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task CancelBooking_ByOtherUser_ThrowsForbidden()
+        {
+            var ev = await CreateTestEventAsync(1);
+            var booking = await CreateBookingAsync(ev.Id);
+
+            using var scope = _serviceProvider.CreateScope();
+
+            var service = scope.ServiceProvider
+                .GetRequiredService<IBookingService>();
+
+            await Assert.ThrowsAsync<ForbiddenException>(
+                () => service.CancelBookingAsync(
+                    booking.Id, Guid.NewGuid(), false));
+
+            var updatedEvent = await GetEventAsync(ev.Id);
+
+            Assert.Equal(0, updatedEvent.AvailableSeats);
+        }
+
+        [Fact]
+        public async Task CancelBooking_ByAdmin_CanCancelAnyBooking()
+        {
+            var ev = await CreateTestEventAsync(1);
+            var booking = await CreateBookingAsync(ev.Id);
+
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var service = scope.ServiceProvider
+                    .GetRequiredService<IBookingService>();
+
+                await service.CancelBookingAsync(
+                    booking.Id, Guid.NewGuid(), true);
+            }
+
+            var updatedBooking = await GetBookingAsync(booking.Id);
+
+            Assert.Equal(BookingStatus.Cancelled, updatedBooking.Status);
+        }
+
+
 
         public void Dispose()
         {

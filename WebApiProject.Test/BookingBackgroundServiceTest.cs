@@ -12,6 +12,8 @@ namespace WebApiProject.Test
 {
     public class BookingBackgroundServiceTest
     {
+        private readonly Guid _userId = Guid.NewGuid();
+
         [Fact]
         public async Task BackgroundService_ProcessesPendingBooking()
         {
@@ -44,7 +46,7 @@ namespace WebApiProject.Test
                     DateTime.UtcNow.AddHours(2),
                     1);
 
-                var booking = new Booking(ev.Id);
+                var booking = new Booking(ev.Id, _userId);
 
                 context.Events.Add(ev);
                 context.Bookings.Add(booking);
@@ -106,7 +108,7 @@ namespace WebApiProject.Test
                 var context = scope.ServiceProvider
                     .GetRequiredService<AppDbContext>();
 
-                var booking = new Booking(Guid.NewGuid());
+                var booking = new Booking(Guid.NewGuid(), _userId);
 
                 context.Bookings.Add(booking);
 

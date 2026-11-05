@@ -6,6 +6,8 @@ namespace EventApi.Domain.Entities
     {
         public Guid Id { get; private set; }
         public Guid EventId { get; private set; }
+        public Guid UserId { get; private set; }
+        public User? User { get; private set; }
         public Event Event { get; private set; } = null!;
         public BookingStatus Status { get; private set; }
         public DateTime CreatedAt { get; private set; }
@@ -13,10 +15,19 @@ namespace EventApi.Domain.Entities
 
         private Booking() { }
 
-        public Booking(Guid eventId)
+        public Booking(Guid eventId, Guid userId)
         {
+            if (eventId == Guid.Empty)
+                throw new ValidationException(
+                    "Идентификатор события не может быть пустым.");
+
+            if (userId == Guid.Empty)
+                throw new ValidationException(
+                    "Идентификатор пользователя не может быть пустым.");
+
             Id = Guid.NewGuid();
             EventId = eventId;
+            UserId = userId;
             Status = BookingStatus.Pending;
             CreatedAt = DateTime.UtcNow;
         }

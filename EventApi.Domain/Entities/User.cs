@@ -8,6 +8,8 @@ public class User
     public string Login { get; private set; } = null!;
     public string PasswordHash { get; private set; } = null!;
     public UserRole Role { get; private set; }
+    public ICollection<Booking> Bookings { get; private set; }
+    = new List<Booking>();
 
     private User() { } // Для EF Core
 

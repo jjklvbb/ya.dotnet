@@ -9,6 +9,7 @@ namespace EventApi.IntegrationTests;
 public class BookingRepositoryTests : IAsyncLifetime
 {
     private readonly PostgresFixture _fixture;
+    private Guid _userId;
 
     private static readonly DateTime BaseDate =
         new(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
@@ -18,9 +19,18 @@ public class BookingRepositoryTests : IAsyncLifetime
         _fixture = fixture;
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
-        return _fixture.ResetDatabaseAsync();
+        await _fixture.ResetDatabaseAsync();
+
+        await using var context = _fixture.CreateContext();
+
+        var user = new User("test-user", "test-hash");
+
+        await context.Users.AddAsync(user);
+        await context.SaveChangesAsync();
+
+        _userId = user.Id;
     }
 
     public Task DisposeAsync()
@@ -35,7 +45,7 @@ public class BookingRepositoryTests : IAsyncLifetime
         var eventEntity = CreateEvent();
         await SeedEventAsync(eventEntity);
 
-        var booking = new Booking(eventEntity.Id);
+        var booking = new Booking(eventEntity.Id, _userId);
 
         await using (var context = _fixture.CreateContext())
         {
@@ -65,7 +75,7 @@ public class BookingRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var eventEntity = CreateEvent();
-        var booking = new Booking(eventEntity.Id);
+        var booking = new Booking(eventEntity.Id, _userId);
 
         await SeedAsync(eventEntity, booking);
 
@@ -102,12 +112,12 @@ public class BookingRepositoryTests : IAsyncLifetime
         // Arrange
         var eventEntity = CreateEvent();
 
-        var pending = new Booking(eventEntity.Id);
+        var pending = new Booking(eventEntity.Id, _userId);
 
-        var confirmed = new Booking(eventEntity.Id);
+        var confirmed = new Booking(eventEntity.Id, _userId);
         confirmed.Confirm();
 
-        var rejected = new Booking(eventEntity.Id);
+        var rejected = new Booking(eventEntity.Id, _userId);
         rejected.Reject();
 
         await SeedAsync(
@@ -134,7 +144,7 @@ public class BookingRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var eventEntity = CreateEvent();
-        var booking = new Booking(eventEntity.Id);
+        var booking = new Booking(eventEntity.Id, _userId);
 
         await SeedAsync(eventEntity, booking);
 
