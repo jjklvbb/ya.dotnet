@@ -29,7 +29,7 @@ public class User
                 "Указана недопустимая роль.");
 
         Id = Guid.NewGuid();
-        Login = login.Trim();
+        Login = login.Trim().ToLowerInvariant();
         PasswordHash = passwordHash;
         Role = role;
     }
