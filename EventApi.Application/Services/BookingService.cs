@@ -35,8 +35,7 @@ namespace EventApi.Application.Services
 
                 if (ev.StartAt <= DateTime.UtcNow)
                 {
-                    throw new ValidationException(
-                        "Нельзя забронировать начавшееся или прошедшее мероприятие.");
+                    throw new EventAlreadyStartedException("Нельзя забронировать начавшееся или прошедшее мероприятие.");
                 }
 
                 var activeBookings =

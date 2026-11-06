@@ -76,6 +76,7 @@ namespace WebApiProject.Middlewares
                 NoAvailableSeatsException => StatusCodes.Status409Conflict,
                 BookingLimitExceededException => StatusCodes.Status409Conflict,
                 ForbiddenException => StatusCodes.Status403Forbidden,
+                EventAlreadyStartedException => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
             };
     }

@@ -84,14 +84,18 @@ namespace WebApiProject.Test
                 .SingleAsync(e => e.Id == eventId);
         }
 
-        private async Task<BookingInfo> CreateBookingAsync(Guid eventId)
+        private async Task<BookingInfo> CreateBookingAsync(
+            Guid eventId,
+            Guid? userId = null)
         {
             using var scope = _serviceProvider.CreateScope();
 
             var service = scope.ServiceProvider
                 .GetRequiredService<IBookingService>();
 
-            return await service.CreateBookingAsync(eventId, _userId);
+            return await service.CreateBookingAsync(
+                eventId,
+                userId ?? _userId);
         }
 
         private async Task<BookingInfo> GetBookingAsync(Guid bookingId)
@@ -427,8 +431,7 @@ namespace WebApiProject.Test
                 await context.SaveChangesAsync();
             }
 
-            await Assert.ThrowsAsync<ValidationException>(
-                () => CreateBookingAsync(eventId));
+            await Assert.ThrowsAsync<EventAlreadyStartedException>(() => CreateBookingAsync(eventId));
         }
 
         [Fact]
@@ -493,7 +496,31 @@ namespace WebApiProject.Test
             Assert.Equal(BookingStatus.Cancelled, updatedBooking.Status);
         }
 
+        [Fact]
+        public async Task CreateBooking_DifferentUsers_HaveIndependentLimits()
+        {
+            // Arrange
+            var ev = await CreateTestEventAsync(12);
+            var anotherUserId = Guid.NewGuid();
 
+            for (var i = 0; i < 10; i++)
+            {
+                await CreateBookingAsync(ev.Id, _userId);
+            }
+
+            // Act
+            var anotherUserBooking =
+                await CreateBookingAsync(ev.Id, anotherUserId);
+
+            // Assert
+            Assert.Equal(BookingStatus.Pending, anotherUserBooking.Status);
+
+            await Assert.ThrowsAsync<BookingLimitExceededException>(
+                () => CreateBookingAsync(ev.Id, _userId));
+
+            var updatedEvent = await GetEventAsync(ev.Id);
+            Assert.Equal(1, updatedEvent.AvailableSeats);
+        }
 
         public void Dispose()
         {
