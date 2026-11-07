@@ -8,6 +8,9 @@ using WebApiProject.Responses;
 using System.ComponentModel.DataAnnotations;
 using DomainValidationException =
     EventApi.Domain.Exceptions.ValidationException;
+using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace WebApiProject.Controllers
 {
@@ -82,6 +85,7 @@ namespace WebApiProject.Controllers
 
         //POST /events — создать событие, возвращать корректный HTTP-ответ(например, 201);
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Post([FromBody] CreateEventDTO newEvent)
         {
             if (!ModelState.IsValid)
@@ -123,6 +127,7 @@ namespace WebApiProject.Controllers
 
         //PUT /events/{id} — обновить событие целиком; если не найдено — вернуть корректный HTTP-ответ (например, 404);
         [HttpPut("{id:Guid}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Put(Guid id, [FromBody] UpdateEventDTO newEvent)
         {
             if (!ModelState.IsValid)
@@ -156,6 +161,7 @@ namespace WebApiProject.Controllers
 
         //DELETE /events/{id} — удалить событие; если не найдено — вернуть корректный HTTP-ответ (например, 404).
         [HttpDelete("{id:Guid}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             await _eventService.DeleteEventAsync(id);
@@ -163,11 +169,19 @@ namespace WebApiProject.Controllers
             return NoContent();
         }
 
+
         [HttpPost("{id:guid}/book")]
         [ProducesResponseType(typeof(Responses.ProblemDetails), StatusCodes.Status409Conflict)]
+        [Authorize]
         public async Task<IActionResult> CreateBooking(Guid id)
         {
-            var booking = await _bookingService.CreateBookingAsync(id);
+            var userIdClaim = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                return Unauthorized();
+
+            var booking = await _bookingService.CreateBookingAsync(
+                id, userId);
 
             var result = new ApiResult<BookingInfo>
             {

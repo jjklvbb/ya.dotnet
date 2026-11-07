@@ -21,7 +21,9 @@ namespace EventApi.Application.Services
             _bookingRepository = bookingRepository;
         }
 
-        public async Task<BookingInfo> CreateBookingAsync(Guid eventId)
+        public async Task<BookingInfo> CreateBookingAsync(
+            Guid eventId,
+            Guid userId)
         {
             await BookingSemaphore.WaitAsync();
 
@@ -31,13 +33,27 @@ namespace EventApi.Application.Services
                     ?? throw new NotFoundException(
                         $"Событие по ключу {eventId} не найдено.");
 
+                if (ev.StartAt <= DateTime.UtcNow)
+                {
+                    throw new EventAlreadyStartedException("Нельзя забронировать начавшееся или прошедшее мероприятие.");
+                }
+
+                var activeBookings =
+                    await _bookingRepository.CountActiveByUserIdAsync(userId);
+
+                if (activeBookings >= 10)
+                {
+                    throw new BookingLimitExceededException(
+                        "У пользователя уже есть 10 активных бронирований.");
+                }
+
                 if (!ev.TryReserveSeats())
                 {
                     throw new NoAvailableSeatsException(
                         "No available seats for this event");
                 }
 
-                var booking = new Booking(eventId);
+                var booking = new Booking(eventId, userId);
 
                 await _bookingRepository.AddAsync(booking);
 
@@ -68,6 +84,33 @@ namespace EventApi.Application.Services
                 booking.Status,
                 booking.CreatedAt,
                 booking.ProcessedAt);
+        }
+
+        public async Task CancelBookingAsync(
+            Guid bookingId,
+            Guid userId,
+            bool isAdmin)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(bookingId)
+                ?? throw new NotFoundException(
+                    $"Бронь по ключу {bookingId} не найдена.");
+
+            if (!isAdmin && booking.UserId != userId)
+            {
+                throw new ForbiddenException(
+                    "Нельзя отменить чужую бронь.");
+            }
+
+            // Метод Cancel() уже проверяет, можно ли отменить бронь.
+            booking.Cancel();
+
+            var ev = await _eventRepository.GetByIdAsync(booking.EventId)
+                ?? throw new NotFoundException(
+                    $"Событие по ключу {booking.EventId} не найдено.");
+
+            ev.ReleaseSeats();
+
+            await _bookingRepository.SaveChangesAsync();
         }
     }
 }

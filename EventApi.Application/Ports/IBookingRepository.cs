@@ -17,5 +17,9 @@ namespace EventApi.Application.Ports
 
         Task SaveChangesAsync(
             CancellationToken cancellationToken = default);
+
+        Task<int> CountActiveByUserIdAsync(
+            Guid userId,
+            CancellationToken cancellationToken = default);
     }
 }

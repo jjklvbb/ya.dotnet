@@ -47,5 +47,16 @@ namespace EventApi.Infrastructure.DataAccess
         {
             await _context.SaveChangesAsync(cancellationToken);
         }
+
+        public Task<int> CountActiveByUserIdAsync(
+            Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            return _context.Bookings.CountAsync(
+                b => b.UserId == userId &&
+                     (b.Status == BookingStatus.Pending ||
+                      b.Status == BookingStatus.Confirmed),
+                cancellationToken);
+        }
     }
 }

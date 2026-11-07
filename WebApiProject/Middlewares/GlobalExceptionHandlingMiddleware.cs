@@ -52,6 +52,7 @@ namespace WebApiProject.Middlewares
                 StatusCodes.Status404NotFound => "Resource not found",
                 StatusCodes.Status409Conflict => "Conflict",
                 StatusCodes.Status500InternalServerError => "Internal server error",
+                StatusCodes.Status403Forbidden => "Forbidden",
                 _ => "Error"
             };
 
@@ -73,6 +74,9 @@ namespace WebApiProject.Middlewares
                 ArgumentException => StatusCodes.Status400BadRequest,
                 NotFoundException => StatusCodes.Status404NotFound,
                 NoAvailableSeatsException => StatusCodes.Status409Conflict,
+                BookingLimitExceededException => StatusCodes.Status409Conflict,
+                ForbiddenException => StatusCodes.Status403Forbidden,
+                EventAlreadyStartedException => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
             };
     }
