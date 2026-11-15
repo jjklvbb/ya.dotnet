@@ -68,6 +68,24 @@ services:
     depends_on:
       events-db:
         condition: service_healthy
+        
+  bookings-db:
+    image: postgres:16-alpine
+    container_name: bookings-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bookingsdb
+    ports:
+      - "5435:5432"
+    volumes:
+      - bookings_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bookingsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 volumes:
   users_pgdata:
   events_pgdata:
+  bookings_pgdata:
