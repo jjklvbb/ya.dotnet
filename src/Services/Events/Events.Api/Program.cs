@@ -10,7 +10,6 @@ using Microsoft.OpenApi;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Events.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,8 +42,6 @@ builder.Services.AddEventsInfrastructure(
     builder.Configuration.GetConnectionString("EventsDb")
     ?? throw new InvalidOperationException(
         "Не настроено подключение к базе мероприятий."));
-
-builder.Services.AddHostedService<BookingConfirmedConsumer>();
 
 // Общая JWT-конфигурация
 var jwtSecret = builder.Configuration["Jwt:Secret"]

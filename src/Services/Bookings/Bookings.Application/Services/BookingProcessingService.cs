@@ -32,13 +32,14 @@ public sealed class BookingProcessingService
 
         booking.Confirm();
 
+        await _bookings.SaveChangesAsync(ct);
+
         await _publisher.PublishConfirmedAsync(
             booking.Id,
             booking.EventId,
             ct);
-
-        await _bookings.SaveChangesAsync(ct);
     }
+
 
     public async Task RejectAsync(
         Guid bookingId,

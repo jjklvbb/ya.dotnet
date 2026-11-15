@@ -60,19 +60,26 @@ namespace Bookings.Api.Middlewares
             {
                 Status = statusCode,
                 Title = title,
-                Detail = ex.Message
+                Detail = statusCode == StatusCodes.Status500InternalServerError
+                        ? "Внутренняя ошибка сервера."
+                        : ex.Message
                 //Type = 
             };
 
             await httpContext.Response.WriteAsJsonAsync(error);
         }
 
+
         private static int MapStatusCode(Exception ex)
             => ex switch
             {
                 ValidationException => StatusCodes.Status400BadRequest,
                 ArgumentException => StatusCodes.Status400BadRequest,
+                NotFoundException => StatusCodes.Status404NotFound,
+                ForbiddenException => StatusCodes.Status403Forbidden,
+                BookingLimitExceededException => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status500InternalServerError
             };
+
     }
 }

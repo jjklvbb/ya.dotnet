@@ -2,6 +2,7 @@
 using Events.Infrastructure.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Events.Infrastructure.Messaging;
 
 namespace Events.Infrastructure;
 
@@ -15,6 +16,9 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<IEventRepository, EventRepository>();
+
+        services.AddHostedService<KafkaTopicInitializer>();
+        services.AddHostedService<BookingConfirmedConsumer>();
 
         return services;
     }

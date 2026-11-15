@@ -5,8 +5,12 @@ using Events.Infrastructure.Messaging;
 using Messaging.Contracts;
 using Messaging.Contracts.Events;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-namespace Events.Api.Services;
+namespace Events.Infrastructure.Messaging;
 
 public sealed class BookingConfirmedConsumer : BackgroundService
 {
@@ -156,12 +160,24 @@ public sealed class BookingConfirmedConsumer : BackgroundService
             .FirstOrDefaultAsync(x => x.Id == message.EventId, ct);
 
         if (ev is null)
-            throw new InvalidOperationException(
-                $"Мероприятие {message.EventId} не найдено.");
+        {
+            _logger.LogWarning(
+                "Бронь {BookingId} пропущена: мероприятие {EventId} не найдено",
+                message.BookingId,
+                message.EventId);
+
+            return;
+        }
 
         if (!ev.TryReserveSeats())
-            throw new InvalidOperationException(
-                $"Нет свободных мест для мероприятия {message.EventId}.");
+        {
+            _logger.LogWarning(
+                "Бронь {BookingId} пропущена: нет свободных мест для мероприятия {EventId}",
+                message.BookingId,
+                message.EventId);
+
+            return;
+        }
 
         db.ProcessedBookingMessages.Add(
             new ProcessedBookingMessage
