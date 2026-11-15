@@ -1,0 +1,36 @@
+services:
+  users-db:
+    image: postgres:16-alpine
+    container_name: users-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: usersdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - users_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d usersdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  users-api:
+    build:
+      context: .
+      dockerfile: src/Services/Users/Users.Api/Dockerfile
+    container_name: users-api
+    ports:
+      - "5101:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__UsersDb: "Host=users-db;Port=5432;Database=usersdb;Username=postgres;Password=postgres"
+      Jwt__Issuer: EventApi
+      Jwt__Audience: EventApiClient
+      Jwt__LifetimeMinutes: 30
+      Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required}
+    depends_on:
+      users-db:
+        condition: service_healthy
+volumes:
+  users_pgdata:
