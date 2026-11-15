@@ -15,6 +15,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+      
   users-api:
     build:
       context: .
@@ -32,5 +33,41 @@ services:
     depends_on:
       users-db:
         condition: service_healthy
+        
+  events-db:
+    image: postgres:16-alpine
+    container_name: events-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: eventsdb
+    ports:
+      - "5434:5432"
+    volumes:
+      - events_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d eventsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  
+  events-api:
+    build:
+      context: .
+      dockerfile: src/Services/Events/Events.Api/Dockerfile
+    container_name: events-api
+    ports:
+      - "5102:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__EventsDb: "Host=events-db;Port=5432;Database=eventsdb;Username=postgres;Password=postgres"
+      Jwt__Issuer: EventApi
+      Jwt__Audience: EventApiClient
+      Jwt__LifetimeMinutes: 30
+      Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required}
+    depends_on:
+      events-db:
+        condition: service_healthy
 volumes:
   users_pgdata:
+  events_pgdata:

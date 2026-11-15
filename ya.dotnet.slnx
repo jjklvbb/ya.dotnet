@@ -1,5 +1,11 @@
 <Solution>
   <Folder Name="/Services/" />
+  <Folder Name="/Services/Events/">
+    <Project Path="src/Services/Events/Events.Api/Events.Api.csproj" Id="114772af-a3cf-4bb6-b782-0052890db1d8" />
+    <Project Path="src/Services/Events/Events.Application/Events.Application.csproj" Id="837514ce-0717-4f53-bf64-891dc609788a" />
+    <Project Path="src/Services/Events/Events.Domain/Events.Domain.csproj" Id="ccb54585-d594-47dd-a028-c04a27505e10" />
+    <Project Path="src/Services/Events/Events.Infrastructure/Events.Infrastructure.csproj" Id="d218b10a-4087-4d12-8785-5ac213478488" />
+  </Folder>
   <Folder Name="/Services/Users/">
     <Project Path="src/Services/Users/Users.Api/Users.Api.csproj" />
     <Project Path="src/Services/Users/Users.Application/Users.Application.csproj" />
