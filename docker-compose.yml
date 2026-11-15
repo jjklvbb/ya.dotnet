@@ -65,9 +65,12 @@ services:
       Jwt__Audience: EventApiClient
       Jwt__LifetimeMinutes: 30
       Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required}
+      Kafka__BootstrapServers: kafka:29092
     depends_on:
       events-db:
         condition: service_healthy
+      kafka:
+        condition: service_started
         
   bookings-db:
     image: postgres:16-alpine
@@ -85,6 +88,52 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+      
+  bookings-api:
+    build:
+      context: .
+      dockerfile: src/Services/Bookings/Bookings.Api/Dockerfile
+    container_name: bookings-api
+    ports:
+      - "5103:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__BookingsDb: "Host=bookings-db;Port=5432;Database=bookingsdb;Username=postgres;Password=postgres"
+      Jwt__Issuer: EventApi
+      Jwt__Audience: EventApiClient
+      Jwt__LifetimeMinutes: 30
+      Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required}
+      Kafka__BootstrapServers: kafka:29092
+    depends_on:
+      bookings-db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+        
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
 volumes:
   users_pgdata:
   events_pgdata:

@@ -1,6 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+COPY ["src/Shared/Messaging.Contracts/Messaging.Contracts.csproj", "src/Shared/Messaging.Contracts/"]
+
 COPY ["src/Services/Events/Events.Domain/Events.Domain.csproj", "src/Services/Events/Events.Domain/"]
 COPY ["src/Services/Events/Events.Application/Events.Application.csproj", "src/Services/Events/Events.Application/"]
 COPY ["src/Services/Events/Events.Infrastructure/Events.Infrastructure.csproj", "src/Services/Events/Events.Infrastructure/"]

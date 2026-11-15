@@ -11,6 +11,7 @@ using System.Text.Json.Serialization;
 using Bookings.Api.Middlewares;
 using Bookings.Infrastructure;
 using Bookings.Infrastructure.DataAccess;
+using Bookings.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +43,9 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IBookingProcessingService, BookingProcessingService>();
+
+builder.Services.AddHostedService<BookingBackgroundService>();
 
 builder.Services.AddBookingsInfrastructure(
     builder.Configuration.GetConnectionString("BookingsDb")

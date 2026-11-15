@@ -52,6 +52,20 @@ namespace Events.Infrastructure.Migrations
 
                     b.ToTable("events", (string)null);
                 });
+
+            modelBuilder.Entity("Events.Infrastructure.Messaging.ProcessedBookingMessage", b =>
+                {
+                    b.Property<Guid>("BookingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("BookingId");
+
+                    b.ToTable("processed_booking_messages", (string)null);
+                });
 #pragma warning restore 612, 618
         }
     }

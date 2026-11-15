@@ -12,7 +12,10 @@
     <Project Path="src/Services/Events/Events.Domain/Events.Domain.csproj" Id="ccb54585-d594-47dd-a028-c04a27505e10" />
     <Project Path="src/Services/Events/Events.Infrastructure/Events.Infrastructure.csproj" Id="d218b10a-4087-4d12-8785-5ac213478488" />
   </Folder>
-  <Folder Name="/Services/Users/">
+  <Folder Name="/Services/Shared/">
+    <Project Path="src/Shared/Messaging.Contracts/Messaging.Contracts.csproj" Id="adffaff2-c6e0-46ac-8c9e-55d8509b8934" />
+  </Folder>
+  <Folder Name="/Services/Shared/Users/">
     <Project Path="src/Services/Users/Users.Api/Users.Api.csproj" />
     <Project Path="src/Services/Users/Users.Application/Users.Application.csproj" />
     <Project Path="src/Services/Users/Users.Domain/Users.Domain.csproj" />
