@@ -1,8 +1,29 @@
 <Solution>
-  <Project Path="EventApi.Application/EventApi.Application.csproj" />
-  <Project Path="EventApi.Domain/EventApi.Domain.csproj" />
-  <Project Path="EventApi.Infrastructure/EventApi.Infrastructure.csproj" />
-  <Project Path="EventApi.IntegrationTests/EventApi.IntegrationTests.csproj" />
-  <Project Path="WebApiProject.Test/WebApiProject.Test.csproj" />
-  <Project Path="WebApiProject/WebApiProject.csproj" />
+  <Folder Name="/Services/" />
+  <Folder Name="/Services/Bookings/">
+    <Project Path="src/Services/Bookings/Bookings.Api/Bookings.Api.csproj" Id="db829862-e892-43b7-9ba8-2ea19ddad93b" />
+    <Project Path="src/Services/Bookings/Bookings.Application/Bookings.Application.csproj" Id="6150ea47-b3ee-4991-9c36-ed355732e6ca" />
+    <Project Path="src/Services/Bookings/Bookings.Domain/Bookings.Domain.csproj" Id="09dda669-0490-47a9-b0c4-1988b4dfab47" />
+    <Project Path="src/Services/Bookings/Bookings.Infrastructure/Bookings.Infrastructure.csproj" Id="3d836eeb-416f-48fd-b4d9-da3898c50893" />
+  </Folder>
+  <Folder Name="/Services/Events/">
+    <Project Path="src/Services/Events/Events.Api/Events.Api.csproj" Id="114772af-a3cf-4bb6-b782-0052890db1d8" />
+    <Project Path="src/Services/Events/Events.Application/Events.Application.csproj" Id="837514ce-0717-4f53-bf64-891dc609788a" />
+    <Project Path="src/Services/Events/Events.Domain/Events.Domain.csproj" Id="ccb54585-d594-47dd-a028-c04a27505e10" />
+    <Project Path="src/Services/Events/Events.Infrastructure/Events.Infrastructure.csproj" Id="d218b10a-4087-4d12-8785-5ac213478488" />
+  </Folder>
+  <Folder Name="/Services/Users/">
+    <Project Path="src/Services/Users/Users.Api/Users.Api.csproj" />
+    <Project Path="src/Services/Users/Users.Application/Users.Application.csproj" />
+    <Project Path="src/Services/Users/Users.Domain/Users.Domain.csproj" />
+    <Project Path="src/Services/Users/Users.Infrastructure/Users.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="src/Shared/Messaging.Contracts/Messaging.Contracts.csproj" Id="adffaff2-c6e0-46ac-8c9e-55d8509b8934" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Bookings.Tests/Bookings.Tests.csproj" />
+    <Project Path="tests/Events.Tests/Events.Tests.csproj" />
+    <Project Path="tests/Users.Tests/Users.Tests.csproj" Id="c7f15895-7833-472f-968c-e5aee3790bcb" />
+  </Folder>
 </Solution>
