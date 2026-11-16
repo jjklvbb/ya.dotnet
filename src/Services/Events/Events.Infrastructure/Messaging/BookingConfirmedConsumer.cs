@@ -38,7 +38,9 @@ public sealed class BookingConfirmedConsumer : BackgroundService
             BootstrapServers = _configuration["Kafka:BootstrapServers"]
                 ?? throw new InvalidOperationException(
                     "Не настроен адрес Kafka."),
-            GroupId = "events-booking-consumer",
+            GroupId = _configuration["Kafka:ConsumerGroup"]
+                ?? throw new InvalidOperationException(
+                    "Не настроена группа потребителей Kafka."),
             AutoOffsetReset = AutoOffsetReset.Earliest,
             EnableAutoCommit = false
         };

@@ -29,9 +29,17 @@ public sealed class KafkaBookingEventPublisher
     public async Task PublishConfirmedAsync(
         Guid bookingId,
         Guid eventId,
+        Guid userId,
+        int seatsCount,
+        DateTime confirmedAt,
         CancellationToken cancellationToken = default)
     {
-        var payload = new BookingConfirmed(bookingId, eventId);
+        var payload = new BookingConfirmed(
+            bookingId,
+            eventId,
+            userId,
+            seatsCount,
+            confirmedAt);
 
         await _producer.ProduceAsync(
             KafkaTopics.BookingConfirmed,

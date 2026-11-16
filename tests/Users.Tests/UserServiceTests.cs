@@ -108,14 +108,14 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task Login_WithWrongPassword_ThrowsValidationException()
+    public async Task Login_WithWrongPassword_ThrowsUnauthorizedException()
     {
         var (context, service, _) = CreateSut();
         await using var db = context;
 
         await service.RegisterAsync("katya", "Password123!");
 
-        await Assert.ThrowsAsync<ValidationException>(
+        await Assert.ThrowsAsync<UnauthorizedException>(
             () => service.LoginAsync("katya", "WrongPassword"));
     }
 
@@ -142,12 +142,12 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task Login_WithUnknownUser_ThrowsValidationException()
+    public async Task Login_WithUnknownUser_ThrowsUnauthorizedException()
     {
         var (context, service, _) = CreateSut();
         await using var db = context;
 
-        await Assert.ThrowsAsync<ValidationException>(
+        await Assert.ThrowsAsync<UnauthorizedException>(
             () => service.LoginAsync("unknown", "Password123!"));
     }
 }

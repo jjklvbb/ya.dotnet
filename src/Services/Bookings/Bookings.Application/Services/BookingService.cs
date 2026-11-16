@@ -36,11 +36,21 @@ public sealed class BookingService : IBookingService
         return ToBookingInfo(booking);
     }
 
-    public async Task<BookingInfo> GetBookingByIdAsync(Guid bookingId)
+
+    public async Task<BookingInfo> GetBookingByIdAsync(
+        Guid bookingId,
+        Guid userId,
+        bool isAdmin)
     {
         var booking = await _bookings.GetByIdAsync(bookingId)
             ?? throw new NotFoundException(
                 $"Бронь по ключу {bookingId} не найдена.");
+
+        if (!isAdmin && booking.UserId != userId)
+        {
+            throw new ForbiddenException(
+                "Нельзя просматривать чужую бронь.");
+        }
 
         return ToBookingInfo(booking);
     }

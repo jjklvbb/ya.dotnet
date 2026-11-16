@@ -20,49 +20,67 @@ public sealed class KafkaTopicInitializer : IHostedService
         _logger = logger;
     }
 
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         var bootstrapServers = _configuration["Kafka:BootstrapServers"]
-            ?? throw new InvalidOperationException("Не настроен адрес Kafka.");
+            ?? throw new InvalidOperationException(
+                "Не настроен адрес Kafka.");
+
+        const int maxAttempts = 10;
 
         using var admin = new AdminClientBuilder(
             new AdminClientConfig
             {
-                BootstrapServers = bootstrapServers
+                BootstrapServers = bootstrapServers,
+                SocketTimeoutMs = 5000
             }).Build();
 
-        try
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            await admin.CreateTopicsAsync(
-            [
-                new TopicSpecification
+            cancellationToken.ThrowIfCancellationRequested();
+
+            try
+            {
+                await admin.CreateTopicsAsync(
+                [
+                    new TopicSpecification
                 {
                     Name = KafkaTopics.BookingConfirmed,
                     NumPartitions = 1,
                     ReplicationFactor = 1
                 }
-            ]);
+                ]);
 
-            _logger.LogInformation(
-                "Kafka-топик {Topic} создан",
-                KafkaTopics.BookingConfirmed);
-        }
-        catch (CreateTopicsException ex)
-            when (ex.Results.All(x =>
-                x.Error.Code == ErrorCode.TopicAlreadyExists))
-        {
-            _logger.LogInformation(
-                "Kafka-топик {Topic} уже существует",
-                KafkaTopics.BookingConfirmed);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Не удалось создать Kafka-топик {Topic}",
-                KafkaTopics.BookingConfirmed);
+                _logger.LogInformation(
+                    "Kafka-топик {Topic} создан",
+                    KafkaTopics.BookingConfirmed);
+
+                return;
+            }
+            catch (CreateTopicsException ex)
+                when (ex.Results.All(x =>
+                    x.Error.Code == ErrorCode.TopicAlreadyExists))
+            {
+                _logger.LogInformation(
+                    "Kafka-топик {Topic} уже существует",
+                    KafkaTopics.BookingConfirmed);
+
+                return;
+            }
+            catch (Exception ex) when (attempt < maxAttempts)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Не удалось создать Kafka-топик. Попытка {Attempt} из {MaxAttempts}",
+                    attempt,
+                    maxAttempts);
+
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            }
         }
     }
+
 
     public Task StopAsync(CancellationToken cancellationToken)
         => Task.CompletedTask;

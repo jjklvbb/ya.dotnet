@@ -53,6 +53,7 @@ namespace Users.Api.Middlewares
                 StatusCodes.Status409Conflict => "Conflict",
                 StatusCodes.Status500InternalServerError => "Internal server error",
                 StatusCodes.Status403Forbidden => "Forbidden",
+                StatusCodes.Status401Unauthorized => "Unauthorized",
                 _ => "Error"
             };
 
@@ -72,6 +73,7 @@ namespace Users.Api.Middlewares
             {
                 ValidationException => StatusCodes.Status400BadRequest,
                 ArgumentException => StatusCodes.Status400BadRequest,
+                UnauthorizedException => StatusCodes.Status401Unauthorized,
                 _ => StatusCodes.Status500InternalServerError
             };
     }

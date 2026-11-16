@@ -34,10 +34,18 @@ public sealed class BookingsController : ControllerBase
             booking);
     }
 
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var booking = await _bookings.GetBookingByIdAsync(id);
+        if (!TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var booking = await _bookings.GetBookingByIdAsync(
+            id,
+            userId,
+            User.IsInRole("Admin"));
+
         return Ok(booking);
     }
 

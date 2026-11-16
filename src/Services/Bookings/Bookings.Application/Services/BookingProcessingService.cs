@@ -37,7 +37,11 @@ public sealed class BookingProcessingService
         await _publisher.PublishConfirmedAsync(
             booking.Id,
             booking.EventId,
+            booking.UserId,
+            1,
+            booking.ProcessedAt!.Value,
             ct);
+
     }
 
 

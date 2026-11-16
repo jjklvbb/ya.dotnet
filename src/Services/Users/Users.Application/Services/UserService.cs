@@ -71,7 +71,7 @@ public sealed class UserService : IUserService
         if (user is null ||
             !_hasher.Verify(password, user.PasswordHash))
         {
-            throw new ValidationException(
+            throw new UnauthorizedException(
                 "Неверный логин или пароль.");
         }
 
