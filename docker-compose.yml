@@ -67,10 +67,13 @@ services:
       Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required}
       Kafka__BootstrapServers: kafka:29092
       Kafka__ConsumerGroup: events-booking-consumer
+      Redis__ConnectionString: redis:6379
     depends_on:
       events-db:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      redis:
         condition: service_healthy
         
   bookings-db:
@@ -144,6 +147,20 @@ services:
       retries: 15
       start_period: 20s
 
+  redis:
+    image: redis:7.2-alpine
+    container_name: eventapi-redis
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 volumes:
   users_pgdata:
   events_pgdata:

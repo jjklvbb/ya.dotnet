@@ -10,10 +10,17 @@ using Microsoft.OpenApi;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Events.Application.Caching;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddSingleton(new EventsCacheSettings(
+    TimeSpan.FromMinutes(
+        builder.Configuration.GetValue<int>("Redis:EventTtlMinutes")),
+    TimeSpan.FromSeconds(
+        builder.Configuration.GetValue<int>("Redis:TopEventsTtlSeconds"))));
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -41,7 +48,9 @@ builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddEventsInfrastructure(
     builder.Configuration.GetConnectionString("EventsDb")
     ?? throw new InvalidOperationException(
-        "Не настроено подключение к базе мероприятий."));
+        "Не настроено подключение к базе мероприятий."),
+    builder.Configuration);
+
 
 // Общая JWT-конфигурация
 var jwtSecret = builder.Configuration["Jwt:Secret"]
