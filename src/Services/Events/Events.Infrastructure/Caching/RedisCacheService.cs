@@ -29,7 +29,7 @@ public sealed class RedisCacheService : ICacheService
 
             return JsonSerializer.Deserialize<T>(value.ToString());
         }
-        catch (Exception ex) when (ex is RedisException or JsonException)
+        catch (Exception ex) when (ex is RedisException or JsonException or TimeoutException)
         {
             _logger.LogWarning(
                 ex,
@@ -51,7 +51,7 @@ public sealed class RedisCacheService : ICacheService
 
             await _database.StringSetAsync(key, json, ttl);
         }
-        catch (Exception ex) when (ex is RedisException or JsonException)
+        catch (Exception ex) when (ex is RedisException or JsonException or TimeoutException)
         {
             _logger.LogWarning(
                 ex,
@@ -66,7 +66,7 @@ public sealed class RedisCacheService : ICacheService
         {
             await _database.KeyDeleteAsync(key);
         }
-        catch (RedisException ex)
+        catch (Exception ex) when (ex is RedisException or TimeoutException)
         {
             _logger.LogWarning(
                 ex,
