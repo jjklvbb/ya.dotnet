@@ -16,11 +16,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+var eventTtlMinutes = builder.Configuration.GetValue<int?>("Redis:EventTtlMinutes");
+var topEventsTtlSeconds = builder.Configuration.GetValue<int?>("Redis:TopEventsTtlSeconds");
+
+if (eventTtlMinutes is null or <= 0)
+    throw new InvalidOperationException("Redis:EventTtlMinutes должен быть положительным числом.");
+
+if (topEventsTtlSeconds is null or <= 0)
+    throw new InvalidOperationException("Redis:TopEventsTtlSeconds должен быть положительным числом.");
+
 builder.Services.AddSingleton(new EventsCacheSettings(
-    TimeSpan.FromMinutes(
-        builder.Configuration.GetValue<int>("Redis:EventTtlMinutes")),
-    TimeSpan.FromSeconds(
-        builder.Configuration.GetValue<int>("Redis:TopEventsTtlSeconds"))));
+    TimeSpan.FromMinutes(eventTtlMinutes.Value),
+    TimeSpan.FromSeconds(topEventsTtlSeconds.Value)));
 
 builder.Services.AddEndpointsApiExplorer();
 
