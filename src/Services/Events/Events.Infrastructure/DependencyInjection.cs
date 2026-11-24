@@ -33,6 +33,7 @@ public static class DependencyInjection
             var options = ConfigurationOptions.Parse(redisConnectionString);
             options.AbortOnConnectFail = false;
             options.ConnectTimeout = 3000;
+            options.SyncTimeout = 3000;
             options.AsyncTimeout = 3000;
 
             return ConnectionMultiplexer.Connect(options);
