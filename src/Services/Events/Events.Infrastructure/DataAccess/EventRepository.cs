@@ -1,92 +1,86 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Events.Application.DTOs;
 using Events.Domain.Entities;
 using Events.Application.Ports;
 
-namespace Events.Infrastructure.DataAccess
+namespace Events.Infrastructure.DataAccess;
+
+public class EventRepository : IEventRepository
 {
-    public class EventRepository : IEventRepository
+    private readonly EventsDbContext _context;
+
+    public EventRepository(EventsDbContext context)
     {
-        private readonly EventsDbContext _context;
+        _context = context;
+    }
 
-        public EventRepository(EventsDbContext context)
+    public async Task<PagedResult<Event>> GetEventsAsync(
+        string? title,
+        DateTime? from,
+        DateTime? to,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<Event> query = _context.Events.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(title))
         {
-            _context = context;
+            var normalizedTitle = title.ToLower();
+            query = query.Where(e => e.Title.ToLower().Contains(normalizedTitle));
         }
 
-        public async Task<PagedResult<Event>> GetEventsAsync(
-            string? title,
-            DateTime? from,
-            DateTime? to,
-            int page,
-            int pageSize,
-            CancellationToken cancellationToken = default)
-        {
-            IQueryable<Event> query = _context.Events.AsNoTracking();
+        if (from.HasValue)
+            query = query.Where(e => e.StartAt >= from.Value);
 
-            if (!string.IsNullOrWhiteSpace(title))
-            {
-                var normalizedTitle = title.ToLower();
+        if (to.HasValue)
+            query = query.Where(e => e.EndAt <= to.Value);
 
-                query = query.Where(e =>
-                    e.Title.ToLower().Contains(normalizedTitle));
-            }
+        var totalItems = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(e => e.StartAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
 
-            if (from.HasValue)
-            {
-                query = query.Where(e =>
-                    e.StartAt >= from.Value);
-            }
+        return new PagedResult<Event>(items, page, items.Count, totalItems);
+    }
 
-            if (to.HasValue)
-            {
-                query = query.Where(e =>
-                    e.EndAt <= to.Value);
-            }
+    public Task<Event?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+    }
 
-            var totalItems = await query.CountAsync(cancellationToken);
+    public Task<List<Event>> GetTopEventsAsync(
+        int count,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.Events
+            .AsNoTracking()
+            .Where(e => e.TotalSeats > 0)
+            .OrderByDescending(e =>
+                (double)(e.TotalSeats - e.AvailableSeats) / e.TotalSeats)
+            .ThenBy(e => e.Id)
+            .Take(count)
+            .ToListAsync(cancellationToken);
+    }
 
-            var items = await query
-                .OrderByDescending(e => e.StartAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync(cancellationToken);
+    public async Task AddAsync(
+        Event newEvent,
+        CancellationToken cancellationToken = default)
+    {
+        await _context.Events.AddAsync(newEvent, cancellationToken);
+    }
 
-            return new PagedResult<Event>(
-                items,
-                page,
-                items.Count,
-                totalItems);
-        }
+    public void Remove(Event eventEntity)
+    {
+        _context.Events.Remove(eventEntity);
+    }
 
-        public Task<Event?> GetByIdAsync(
-            Guid id,
-            CancellationToken cancellationToken = default)
-        {
-            return _context.Events
-                .FirstOrDefaultAsync(
-                    e => e.Id == id,
-                    cancellationToken);
-        }
-
-        public async Task AddAsync(
-            Event newEvent,
-            CancellationToken cancellationToken = default)
-        {
-            await _context.Events.AddAsync(
-                newEvent,
-                cancellationToken);
-        }
-
-        public void Remove(Event eventEntity)
-        {
-            _context.Events.Remove(eventEntity);
-        }
-
-        public async Task SaveChangesAsync(
-            CancellationToken cancellationToken = default)
-        {
-            await _context.SaveChangesAsync(cancellationToken);
-        }
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

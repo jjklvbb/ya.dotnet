@@ -1,4 +1,4 @@
-﻿using Events.Application.DTOs;
+using Events.Application.DTOs;
 using Events.Domain.Entities;
 
 namespace Events.Application.Interfaces;
@@ -12,7 +12,9 @@ public interface IEventService
         int page,
         int pageSize);
 
-    Task<Event> GetEventByIdAsync(Guid id);
+    Task<EventResponseDto> GetEventByIdAsync(Guid id);
+
+    Task<IReadOnlyList<EventResponseDto>> GetTopEventsAsync();
 
     Task<Event> CreateEventAsync(
         string title,

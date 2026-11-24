@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using Confluent.Kafka;
 using Events.Infrastructure.DataAccess;
-using Events.Infrastructure.Messaging;
 using Messaging.Contracts;
 using Messaging.Contracts.Events;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Events.Application.Caching;
+using Events.Application.Ports;
 
 namespace Events.Infrastructure.Messaging;
 
@@ -190,6 +191,10 @@ public sealed class BookingConfirmedConsumer : BackgroundService
 
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
+
+        var cache = scope.ServiceProvider.GetRequiredService<ICacheService>();
+
+        await cache.RemoveAsync(EventCacheKeys.ById(message.EventId));
 
         _logger.LogInformation(
             "Бронь {BookingId} обработана, место списано",
