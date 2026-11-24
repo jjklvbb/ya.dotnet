@@ -77,7 +77,7 @@
    docker compose ps
    ```
 
-Docker Compose поднимает три API, три PostgreSQL, Kafka, ZooKeeper и Redis. Миграции EF Core применяются API при запуске. Для Kafka и Redis настроены проверки готовности (`healthcheck`); Events ожидает готовности соответствующих зависимостей при запуске Compose.
+Docker Compose поднимает три API, три PostgreSQL, Kafka, ZooKeeper и Redis. Миграции EF Core применяются API при запуске. Для Kafka и Redis настроены проверки готовности (`healthcheck`). При запуске через Compose Events ожидает готовности PostgreSQL и Kafka, но не Redis: кеш необязателен, поэтому Events может запуститься и работать при его недоступности.
 
 | Сервис | Swagger | PostgreSQL (порт хоста) |
 |---|---|---|
